@@ -71,15 +71,24 @@ if ($courseid && $confirm && confirm_sesskey()) {
         $row->cells[] = $modname;
 
         if ($result['success']) {
-            $row->cells[] = html_writer::tag('span', get_string('statussuccess', 'local_ragingest'),
-                ['class' => 'badge badge-success bg-success']);
+            $row->cells[] = html_writer::tag(
+                'span',
+                get_string('statussuccess', 'local_ragingest'),
+                ['class' => 'badge badge-success bg-success']
+            );
             $successcount++;
         } else if ($result['status'] === 'skipped') {
-            $row->cells[] = html_writer::tag('span', get_string('statusskipped', 'local_ragingest'),
-                ['class' => 'badge badge-warning bg-warning']);
+            $row->cells[] = html_writer::tag(
+                'span',
+                get_string('statusskipped', 'local_ragingest'),
+                ['class' => 'badge badge-warning bg-warning']
+            );
         } else {
-            $row->cells[] = html_writer::tag('span', get_string('statuserror', 'local_ragingest'),
-                ['class' => 'badge badge-danger bg-danger']);
+            $row->cells[] = html_writer::tag(
+                'span',
+                get_string('statuserror', 'local_ragingest'),
+                ['class' => 'badge badge-danger bg-danger']
+            );
         }
 
         $row->cells[] = $result['message'] ?? '';
@@ -91,7 +100,6 @@ if ($courseid && $confirm && confirm_sesskey()) {
 
     // Back link.
     echo $OUTPUT->single_button($pageurl, get_string('back'), 'get');
-
 } else if ($courseid) {
     // Show confirmation.
     try {
@@ -111,7 +119,6 @@ if ($courseid && $confirm && confirm_sesskey()) {
     ]);
     echo $OUTPUT->single_button($confirmurl, get_string('reindex_btn', 'local_ragingest'), 'post');
     echo $OUTPUT->single_button($pageurl, get_string('cancel'), 'get');
-
 } else {
     // Show course selection form.
     echo $OUTPUT->heading(get_string('selectcourse', 'local_ragingest'), 3);

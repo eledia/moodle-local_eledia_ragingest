@@ -27,7 +27,6 @@ namespace local_ragingest;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class api_client {
-
     /** @var int Maximum number of retry attempts for failed requests. */
     private const MAX_RETRIES = 3;
 

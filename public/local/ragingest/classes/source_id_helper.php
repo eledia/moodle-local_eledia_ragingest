@@ -27,7 +27,6 @@ namespace local_ragingest;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class source_id_helper {
-
     /**
      * Build a source ID from a course module info object.
      *

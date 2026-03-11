@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace ragingestextractor_book;
+namespace local_ragingest;
 
 /**
  * Unit tests for the book content extractor.
  *
- * @package    ragingestextractor_book
+ * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \ragingestextractor_book\extractor
  */
-final class extractor_test extends \advanced_testcase {
-
+final class extractor_book_test extends \advanced_testcase {
     /**
      * Test that the book extractor supports book modules.
      */

@@ -25,7 +25,6 @@ namespace local_ragingest;
  * @covers     \local_ragingest\api_client
  */
 final class api_client_test extends \advanced_testcase {
-
     /**
      * Test that the client reports not configured when settings are empty.
      */

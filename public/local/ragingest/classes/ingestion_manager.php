@@ -27,7 +27,6 @@ namespace local_ragingest;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class ingestion_manager {
-
     /** @var string[] Allowed MIME types for ingestion. */
     private const ALLOWED_CONTENT_TYPES = [
         'text/plain',

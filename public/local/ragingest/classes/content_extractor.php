@@ -27,7 +27,6 @@ namespace local_ragingest;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 interface content_extractor {
-
     /**
      * Check whether this extractor supports the given course module.
      *

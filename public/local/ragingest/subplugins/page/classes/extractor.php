@@ -30,7 +30,6 @@ use local_ragingest\content_extractor;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class extractor implements content_extractor {
-
     /**
      * Check whether this extractor supports the given module.
      *

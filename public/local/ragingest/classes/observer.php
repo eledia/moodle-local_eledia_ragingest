@@ -28,7 +28,6 @@ namespace local_ragingest;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class observer {
-
     /**
      * Handle course module created event.
      *

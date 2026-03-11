@@ -27,7 +27,6 @@ namespace local_ragingest;
  * @covers     \local_ragingest\observer
  */
 final class observer_test extends \advanced_testcase {
-
     /**
      * Test that creating a course module queues an ingestion task.
      */
@@ -52,8 +51,11 @@ final class observer_test extends \advanced_testcase {
             'classname' => '\\local_ragingest\\task\\ingest_module_task',
         ]);
 
-        $this->assertGreaterThan($countbefore, $countafter,
-            'An ingestion ad-hoc task should have been queued.');
+        $this->assertGreaterThan(
+            $countbefore,
+            $countafter,
+            'An ingestion ad-hoc task should have been queued.'
+        );
     }
 
     /**
@@ -91,8 +93,11 @@ final class observer_test extends \advanced_testcase {
             'classname' => '\\local_ragingest\\task\\ingest_module_task',
         ]);
 
-        $this->assertGreaterThanOrEqual(1, $count,
-            'An ingestion ad-hoc task should have been queued on update.');
+        $this->assertGreaterThanOrEqual(
+            1,
+            $count,
+            'An ingestion ad-hoc task should have been queued on update.'
+        );
     }
 
     /**
@@ -124,7 +129,10 @@ final class observer_test extends \advanced_testcase {
             'classname' => '\\local_ragingest\\task\\delete_module_task',
         ]);
 
-        $this->assertGreaterThanOrEqual(1, $count,
-            'A deletion ad-hoc task should have been queued.');
+        $this->assertGreaterThanOrEqual(
+            1,
+            $count,
+            'A deletion ad-hoc task should have been queued.'
+        );
     }
 }

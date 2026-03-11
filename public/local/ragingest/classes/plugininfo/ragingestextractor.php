@@ -32,7 +32,6 @@ defined('MOODLE_INTERNAL') || die();
  * Plugininfo class for ragingestextractor subplugins.
  */
 class ragingestextractor extends base {
-
     /**
      * Allow uninstalling extractor subplugins.
      *

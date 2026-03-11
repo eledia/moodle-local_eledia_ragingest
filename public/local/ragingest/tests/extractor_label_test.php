@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace ragingestextractor_label;
+namespace local_ragingest;
 
 /**
  * Unit tests for the label content extractor.
  *
- * @package    ragingestextractor_label
+ * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \ragingestextractor_label\extractor
  */
-final class extractor_test extends \advanced_testcase {
-
+final class extractor_label_test extends \advanced_testcase {
     /**
      * Test that the label extractor supports label modules.
      */

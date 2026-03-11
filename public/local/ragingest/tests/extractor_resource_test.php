@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace ragingestextractor_resource;
+namespace local_ragingest;
 
 /**
  * Unit tests for the resource content extractor.
  *
- * @package    ragingestextractor_resource
+ * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  * @covers     \ragingestextractor_resource\extractor
  */
-final class extractor_test extends \advanced_testcase {
-
+final class extractor_resource_test extends \advanced_testcase {
     /**
      * Test that the resource extractor supports resource modules.
      */
@@ -130,8 +129,12 @@ final class extractor_test extends \advanced_testcase {
      * @param string $mimetype The MIME type.
      * @return \stdClass The resource module record with cmid.
      */
-    private function create_resource_with_file(\stdClass $course, string $filename, string $content,
-            string $mimetype): \stdClass {
+    private function create_resource_with_file(
+        \stdClass $course,
+        string $filename,
+        string $content,
+        string $mimetype
+    ): \stdClass {
         $resource = $this->getDataGenerator()->create_module('resource', [
             'course' => $course->id,
         ]);

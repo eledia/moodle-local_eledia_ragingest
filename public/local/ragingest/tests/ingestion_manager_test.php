@@ -25,7 +25,6 @@ namespace local_ragingest;
  * @covers     \local_ragingest\ingestion_manager
  */
 final class ingestion_manager_test extends \advanced_testcase {
-
     /**
      * Set up test configuration.
      */
@@ -162,14 +161,14 @@ final class ingestion_manager_test extends \advanced_testcase {
      * Test that the ingestion manager enforces file size limits.
      */
     public function test_reindex_course_enforces_size_limit(): void {
-        // Set a tiny size limit of 1 byte for testing.
-        set_config('max_document_size_mb', '0', 'local_ragingest');
+        // Set a tiny size limit of 0.001 MB (1 KB) for testing.
+        set_config('max_document_size_mb', '0.001', 'local_ragingest');
 
         $course = $this->getDataGenerator()->create_course();
         $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
             'name' => 'Big Page',
-            'content' => '<p>This content exceeds 0 MB limit</p>',
+            'content' => '<p>This content exceeds 1 KB limit</p>' . str_repeat('x', 2000),
         ]);
 
         $manager = new ingestion_manager();

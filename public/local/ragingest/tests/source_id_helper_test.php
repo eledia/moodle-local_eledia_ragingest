@@ -25,7 +25,6 @@ namespace local_ragingest;
  * @covers     \local_ragingest\source_id_helper
  */
 final class source_id_helper_test extends \advanced_testcase {
-
     /**
      * Test building source IDs from raw course/cmid values with default tenant.
      */
