@@ -90,6 +90,7 @@ final class extractor_label_test extends \advanced_testcase {
      * Test that extraction returns null for a label with empty intro.
      */
     public function test_extract_returns_null_for_empty_label(): void {
+        global $DB;
         $this->resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
@@ -97,6 +98,9 @@ final class extractor_label_test extends \advanced_testcase {
             'course' => $course->id,
             'intro' => '',
         ]);
+
+        // The label generator auto-fills intro with the name, so force it to be empty.
+        $DB->set_field('label', 'intro', '', ['id' => $label->id]);
 
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($label->cmid);
