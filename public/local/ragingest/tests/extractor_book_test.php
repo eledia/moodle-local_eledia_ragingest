@@ -39,7 +39,7 @@ final class extractor_book_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($book->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_book\extractor();
         $this->assertTrue($extractor->supports($cm));
     }
 
@@ -58,7 +58,7 @@ final class extractor_book_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($page->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_book\extractor();
         $this->assertFalse($extractor->supports($cm));
     }
 
@@ -90,7 +90,7 @@ final class extractor_book_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($book->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_book\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNotNull($result);
@@ -134,7 +134,7 @@ final class extractor_book_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($book->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_book\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNotNull($result);
@@ -168,7 +168,7 @@ final class extractor_book_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($book->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_book\extractor();
         $result = $extractor->extract($cm);
 
         // With only hidden chapters, extraction should return null.
@@ -193,7 +193,7 @@ final class extractor_book_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($book->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_book\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNull($result);

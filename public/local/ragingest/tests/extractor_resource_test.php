@@ -30,6 +30,7 @@ final class extractor_resource_test extends \advanced_testcase {
      */
     public function test_supports_resource(): void {
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course();
         $resource = $this->create_resource_with_file($course, 'test.txt', 'Hello World', 'text/plain');
@@ -37,7 +38,7 @@ final class extractor_resource_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($resource->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_resource\extractor();
         $this->assertTrue($extractor->supports($cm));
     }
 
@@ -56,7 +57,7 @@ final class extractor_resource_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($page->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_resource\extractor();
         $this->assertFalse($extractor->supports($cm));
     }
 
@@ -65,6 +66,7 @@ final class extractor_resource_test extends \advanced_testcase {
      */
     public function test_extract_text_file(): void {
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course();
         $resource = $this->create_resource_with_file($course, 'notes.txt', 'Plain text content', 'text/plain');
@@ -72,7 +74,7 @@ final class extractor_resource_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($resource->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_resource\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNotNull($result);
@@ -86,6 +88,7 @@ final class extractor_resource_test extends \advanced_testcase {
      */
     public function test_extract_html_file(): void {
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course();
         $htmlcontent = '<html><body><h1>Hello</h1></body></html>';
@@ -94,7 +97,7 @@ final class extractor_resource_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($resource->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_resource\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNotNull($result);
@@ -107,6 +110,7 @@ final class extractor_resource_test extends \advanced_testcase {
      */
     public function test_extract_returns_null_for_unsupported_mimetype(): void {
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course();
         $resource = $this->create_resource_with_file($course, 'image.png', 'fakepngdata', 'image/png');
@@ -114,7 +118,7 @@ final class extractor_resource_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($resource->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_resource\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNull($result);

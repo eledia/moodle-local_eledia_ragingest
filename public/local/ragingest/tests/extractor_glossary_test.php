@@ -39,7 +39,7 @@ final class extractor_glossary_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($glossary->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_glossary\extractor();
         $this->assertTrue($extractor->supports($cm));
     }
 
@@ -58,7 +58,7 @@ final class extractor_glossary_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($page->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_glossary\extractor();
         $this->assertFalse($extractor->supports($cm));
     }
 
@@ -83,7 +83,7 @@ final class extractor_glossary_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($glossary->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_glossary\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNotNull($result);
@@ -111,7 +111,7 @@ final class extractor_glossary_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($glossary->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_glossary\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNull($result);
@@ -145,7 +145,7 @@ final class extractor_glossary_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($glossary->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_glossary\extractor();
         $result = $extractor->extract($cm);
 
         // With only unapproved entries, extraction should return null.

@@ -1,5 +1,5 @@
 {
     "subplugintypes": {
-        "ragingestextractor": "local/ragingest/subplugins"
+        "ragingestextractor": "subplugins"
     }
 }

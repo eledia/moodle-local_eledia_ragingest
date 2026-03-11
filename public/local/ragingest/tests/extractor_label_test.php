@@ -40,7 +40,7 @@ final class extractor_label_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($label->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_label\extractor();
         $this->assertTrue($extractor->supports($cm));
     }
 
@@ -59,7 +59,7 @@ final class extractor_label_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($page->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_label\extractor();
         $this->assertFalse($extractor->supports($cm));
     }
 
@@ -78,7 +78,7 @@ final class extractor_label_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($label->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_label\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNotNull($result);
@@ -101,7 +101,7 @@ final class extractor_label_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($label->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_label\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNull($result);

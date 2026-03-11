@@ -40,7 +40,7 @@ final class extractor_page_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($page->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_page\extractor();
         $this->assertTrue($extractor->supports($cm));
     }
 
@@ -58,7 +58,7 @@ final class extractor_page_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($forum->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_page\extractor();
         $this->assertFalse($extractor->supports($cm));
     }
 
@@ -78,7 +78,7 @@ final class extractor_page_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($page->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_page\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNotNull($result);
@@ -106,7 +106,7 @@ final class extractor_page_test extends \advanced_testcase {
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($page->cmid);
 
-        $extractor = new extractor();
+        $extractor = new \ragingestextractor_page\extractor();
         $result = $extractor->extract($cm);
 
         $this->assertNull($result);
