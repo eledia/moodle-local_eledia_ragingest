@@ -15,9 +15,9 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Plugin version for the quiz content extractor subplugin.
  *
- * @package    local_ragingest
+ * @package    ragingestextractor_quiz
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -26,7 +26,4 @@ defined('MOODLE_INTERNAL') || die();
 
 $plugin->version   = 2026032001;
 $plugin->requires  = 2024100700;
-$plugin->supported = [405, 501];
-$plugin->component = 'local_ragingest';
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.3.0';
+$plugin->component = 'ragingestextractor_quiz';

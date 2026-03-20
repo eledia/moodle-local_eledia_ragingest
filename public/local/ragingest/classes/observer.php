@@ -67,6 +67,58 @@ class observer {
     }
 
     /**
+     * Handle book chapter created/updated/deleted events.
+     *
+     * Book chapters are sub-content of the book activity. When any
+     * chapter changes, we re-ingest the entire book. The event's
+     * context is the book's course module context.
+     *
+     * @param \core\event\base $event The chapter event.
+     */
+    public static function book_chapter_changed(\core\event\base $event): void {
+        self::queue_ingestion($event->courseid, $event->contextinstanceid);
+    }
+
+    /**
+     * Handle glossary entry created/updated/deleted events.
+     *
+     * Glossary entries are sub-content of the glossary activity. When
+     * any entry changes, we re-ingest the entire glossary. The event's
+     * context is the glossary's course module context.
+     *
+     * @param \core\event\base $event The entry event.
+     */
+    public static function glossary_entry_changed(\core\event\base $event): void {
+        self::queue_ingestion($event->courseid, $event->contextinstanceid);
+    }
+
+    /**
+     * Handle lesson page created/updated/deleted events.
+     *
+     * Lesson pages are sub-content of the lesson activity. When any
+     * page changes, we re-ingest the entire lesson. The event's
+     * context is the lesson's course module context.
+     *
+     * @param \core\event\base $event The page event.
+     */
+    public static function lesson_page_changed(\core\event\base $event): void {
+        self::queue_ingestion($event->courseid, $event->contextinstanceid);
+    }
+
+    /**
+     * Handle wiki page created/updated/deleted events.
+     *
+     * Wiki pages are sub-content of the wiki activity. When any page
+     * changes, we re-ingest the entire wiki. The event's context is
+     * the wiki's course module context.
+     *
+     * @param \core\event\base $event The page event.
+     */
+    public static function wiki_page_changed(\core\event\base $event): void {
+        self::queue_ingestion($event->courseid, $event->contextinstanceid);
+    }
+
+    /**
      * Queue an ingestion task for a course module.
      *
      * @param int $courseid The course ID.

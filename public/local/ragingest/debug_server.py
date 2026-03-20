@@ -38,6 +38,8 @@ C_DIM = "\033[2m"
 # Global config set from CLI args.
 FAIL_MODE = False
 RESPONSE_DELAY = 0
+FULL_CONTENT = False
+PREVIEW_SIZE = 500
 
 
 class RAGDebugHandler(BaseHTTPRequestHandler):
@@ -126,15 +128,28 @@ class RAGDebugHandler(BaseHTTPRequestHandler):
         display = {}
         for key, value in payload.items():
             if key == "content" and isinstance(value, str) and len(value) > 100:
-                # Decode base64 to show size info.
+                # Decode base64 to show content.
                 try:
                     decoded = base64.b64decode(value)
                     size_kb = len(decoded) / 1024
-                    preview = decoded[:80].decode("utf-8", errors="replace")
-                    display[key] = (
-                        f"<base64, {len(value)} chars → {size_kb:.1f} KB decoded>\n"
-                        f"          Preview: {preview!r}..."
-                    )
+                    decoded_text = decoded.decode("utf-8", errors="replace")
+                    if FULL_CONTENT:
+                        display[key] = (
+                            f"<base64, {len(value)} chars → {size_kb:.1f} KB decoded>\n"
+                            f"          ┌─ FULL CONTENT ─────────────────────────\n"
+                            + "".join(
+                                f"          │ {line}\n"
+                                for line in decoded_text.splitlines()
+                            )
+                            + f"          └─ END ({len(decoded_text)} chars) ────"
+                        )
+                    else:
+                        preview = decoded_text[:PREVIEW_SIZE]
+                        suffix = "..." if len(decoded_text) > PREVIEW_SIZE else ""
+                        display[key] = (
+                            f"<base64, {len(value)} chars → {size_kb:.1f} KB decoded>\n"
+                            f"          Preview ({PREVIEW_SIZE} chars): {preview!r}{suffix}"
+                        )
                 except Exception:
                     display[key] = f"<base64, {len(value)} chars>"
             elif key == "qdrant_metadata" and isinstance(value, dict):
@@ -189,12 +204,22 @@ def main():
         "--delay", type=float, default=0,
         help="Add delay in seconds before responding (test timeout handling)"
     )
+    parser.add_argument(
+        "--full", action="store_true",
+        help="Show full decoded content instead of a preview"
+    )
+    parser.add_argument(
+        "--preview-size", type=int, default=500,
+        help="Number of characters to show in content preview (default: 500)"
+    )
 
     args = parser.parse_args()
 
-    global FAIL_MODE, RESPONSE_DELAY
+    global FAIL_MODE, RESPONSE_DELAY, FULL_CONTENT, PREVIEW_SIZE
     FAIL_MODE = args.fail
     RESPONSE_DELAY = args.delay
+    FULL_CONTENT = args.full
+    PREVIEW_SIZE = args.preview_size
 
     server = HTTPServer((args.host, args.port), RAGDebugHandler)
 
@@ -207,6 +232,7 @@ def main():
   {C_CYAN}Upsert URL:{C_RESET}  http://localhost:{args.port}/documents/upsert
   {C_CYAN}Delete URL:{C_RESET}  http://localhost:{args.port}/documents/delete
   {C_CYAN}Fail mode:{C_RESET}   {'ON (500 errors)' if FAIL_MODE else 'OFF (200 OK)'}
+  {C_CYAN}Content:{C_RESET}     {'FULL (show all decoded content)' if FULL_CONTENT else f'Preview ({PREVIEW_SIZE} chars)'}
   {C_CYAN}Delay:{C_RESET}       {RESPONSE_DELAY}s
 
   Configure in Moodle admin → Plugins → Local → RAG Content Ingestion:

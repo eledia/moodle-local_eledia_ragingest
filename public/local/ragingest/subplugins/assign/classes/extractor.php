@@ -14,18 +14,17 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
-namespace ragingestextractor_page;
+namespace ragingestextractor_assign;
 
 use local_ragingest\content_extractor;
 
 /**
- * Content extractor for mod_page activities.
+ * Content extractor for mod_assign activities.
  *
- * Extracts the HTML content and title from a page activity.
- * The raw HTML is transmitted without preprocessing — the RAG
- * service handles text extraction and chunking.
+ * Extracts the assignment description (intro) and optional additional
+ * activity instructions. No student submissions are included.
  *
- * @package    ragingestextractor_page
+ * @package    ragingestextractor_assign
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
@@ -34,14 +33,14 @@ class extractor implements content_extractor {
      * Check whether this extractor supports the given module.
      *
      * @param \cm_info $cm The course module info.
-     * @return bool True if this is a page module.
+     * @return bool True if this is an assign module.
      */
     public function supports(\cm_info $cm): bool {
-        return $cm->modname === 'page';
+        return $cm->modname === 'assign';
     }
 
     /**
-     * Extract content from a page activity.
+     * Extract content from an assignment activity.
      *
      * @param \cm_info $cm The course module info.
      * @return array|null Extracted document data, or null if no content.
@@ -49,28 +48,35 @@ class extractor implements content_extractor {
     public function extract(\cm_info $cm): ?array {
         global $DB;
 
-        $page = $DB->get_record('page', ['id' => $cm->instance], 'id, name, content', MUST_EXIST);
+        $assign = $DB->get_record('assign', ['id' => $cm->instance], 'id, name, intro, activity', MUST_EXIST);
 
-        if (empty($page->content)) {
+        if (empty($assign->intro) && empty($assign->activity)) {
             return null;
         }
 
-        // Rewrite @@PLUGINFILE@@ tokens to full URLs so that the
-        // H5P embed helper can resolve any embedded H5P content.
         $context = \context_module::instance($cm->id);
-        $content = file_rewrite_pluginfile_urls(
-            $page->content,
-            'pluginfile.php',
-            $context->id,
-            'mod_page',
-            'content',
-            0,
-        );
+        $html = '';
+
+        if (!empty($assign->intro)) {
+            $html .= file_rewrite_pluginfile_urls(
+                $assign->intro, 'pluginfile.php', $context->id, 'mod_assign', 'intro', 0,
+            );
+        }
+
+        if (!empty($assign->activity)) {
+            $html .= file_rewrite_pluginfile_urls(
+                $assign->activity, 'pluginfile.php', $context->id, 'mod_assign', 'activity', 0,
+            );
+        }
+
+        if (empty($html)) {
+            return null;
+        }
 
         return [
-            'content' => $content,
+            'content' => $html,
             'content_type' => 'text/html',
-            'title' => $page->name,
+            'title' => $assign->name,
         ];
     }
 }

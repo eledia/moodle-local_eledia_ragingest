@@ -203,6 +203,13 @@ class ingestion_manager {
             ];
         }
 
+        // Post-process HTML content: resolve any embedded H5P placeholders
+        // so that the RAG service receives the actual H5P text instead of
+        // bare editor-inserted placeholder divs.
+        if ($document['content_type'] === 'text/html') {
+            $document['content'] = h5p_embed_helper::resolve_h5p_placeholders($document['content']);
+        }
+
         // Validate content type.
         if (!in_array($document['content_type'], self::ALLOWED_CONTENT_TYPES, true)) {
             return [

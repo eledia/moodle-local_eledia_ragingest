@@ -65,13 +65,25 @@ class extractor implements content_extractor {
             return null;
         }
 
+        $context = \context_module::instance($cm->id);
+
         // Build a single HTML document from all entries.
         $html = '<h1>' . htmlspecialchars($glossary->name, ENT_QUOTES, 'UTF-8') . '</h1>' . "\n";
         $html .= '<dl>' . "\n";
 
         foreach ($entries as $entry) {
+            // Rewrite @@PLUGINFILE@@ tokens to full URLs so that the
+            // H5P embed helper can resolve any embedded H5P content.
+            $definition = file_rewrite_pluginfile_urls(
+                $entry->definition,
+                'pluginfile.php',
+                $context->id,
+                'mod_glossary',
+                'entry',
+                $entry->id,
+            );
             $html .= '  <dt>' . htmlspecialchars($entry->concept, ENT_QUOTES, 'UTF-8') . '</dt>' . "\n";
-            $html .= '  <dd>' . $entry->definition . '</dd>' . "\n";
+            $html .= '  <dd>' . $definition . '</dd>' . "\n";
         }
 
         $html .= '</dl>' . "\n";

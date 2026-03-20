@@ -15,18 +15,12 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Language strings for the assign content extractor subplugin.
  *
- * @package    local_ragingest
+ * @package    ragingestextractor_assign
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2026032001;
-$plugin->requires  = 2024100700;
-$plugin->supported = [405, 501];
-$plugin->component = 'local_ragingest';
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.3.0';
+$string['pluginname'] = 'Assignment Content Extractor';
+$string['privacy:metadata'] = 'The assignment content extractor does not store any personal data.';

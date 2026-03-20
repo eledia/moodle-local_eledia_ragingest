@@ -135,4 +135,141 @@ final class observer_test extends \advanced_testcase {
             'A deletion ad-hoc task should have been queued.'
         );
     }
+
+    /**
+     * Test that updating a book chapter queues an ingestion task for the book.
+     */
+    public function test_book_chapter_updated_queues_task(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $book = $this->getDataGenerator()->create_module('book', [
+            'course' => $course->id,
+        ]);
+
+        // Create a chapter via the generator.
+        $bookgenerator = $this->getDataGenerator()->get_plugin_generator('mod_book');
+        $chapter = $bookgenerator->create_chapter([
+            'bookid' => $book->id,
+            'title' => 'Test Chapter',
+            'content' => '<p>Original content</p>',
+        ]);
+
+        // Clear any tasks from creation.
+        $DB->delete_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        // Trigger chapter_updated event.
+        $context = \context_module::instance($book->cmid);
+        $bookrecord = $DB->get_record('book', ['id' => $book->id]);
+        $event = \mod_book\event\chapter_updated::create_from_chapter($bookrecord, $context, $chapter);
+        $event->trigger();
+
+        $count = $DB->count_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            $count,
+            'An ingestion ad-hoc task should have been queued when a book chapter is updated.'
+        );
+
+        // Verify the task has the book's cmid, not the chapter id.
+        $tasks = $DB->get_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+        $task = reset($tasks);
+        $data = json_decode($task->customdata);
+        $this->assertEquals($book->cmid, $data->cmid);
+    }
+
+    /**
+     * Test that creating a book chapter queues an ingestion task.
+     */
+    public function test_book_chapter_created_queues_task(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $book = $this->getDataGenerator()->create_module('book', [
+            'course' => $course->id,
+        ]);
+
+        // Clear any tasks from book creation.
+        $DB->delete_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        // Trigger chapter_created event.
+        $context = \context_module::instance($book->cmid);
+        $bookrecord = $DB->get_record('book', ['id' => $book->id]);
+        $chapter = new \stdClass();
+        $chapter->id = 999;
+        $chapter->bookid = $book->id;
+        $chapter->title = 'New Chapter';
+
+        $event = \mod_book\event\chapter_created::create_from_chapter($bookrecord, $context, $chapter);
+        $event->trigger();
+
+        $count = $DB->count_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            $count,
+            'An ingestion ad-hoc task should have been queued when a book chapter is created.'
+        );
+    }
+
+    /**
+     * Test that updating a glossary entry queues an ingestion task for the glossary.
+     */
+    public function test_glossary_entry_updated_queues_task(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $glossary = $this->getDataGenerator()->create_module('glossary', [
+            'course' => $course->id,
+        ]);
+
+        // Clear any tasks from creation.
+        $DB->delete_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        // Trigger entry_updated event.
+        $context = \context_module::instance($glossary->cmid);
+        $event = \mod_glossary\event\entry_updated::create([
+            'context' => $context,
+            'objectid' => 123,
+            'other' => ['concept' => 'Test Term'],
+        ]);
+        $event->trigger();
+
+        $count = $DB->count_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        $this->assertGreaterThanOrEqual(
+            1,
+            $count,
+            'An ingestion ad-hoc task should have been queued when a glossary entry is updated.'
+        );
+
+        // Verify the task has the glossary's cmid.
+        $tasks = $DB->get_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+        $task = reset($tasks);
+        $data = json_decode($task->customdata);
+        $this->assertEquals($glossary->cmid, $data->cmid);
+    }
 }

@@ -65,6 +65,8 @@ class extractor implements content_extractor {
             return null;
         }
 
+        $context = \context_module::instance($cm->id);
+
         // Build a single HTML document from all chapters.
         $html = '<h1>' . htmlspecialchars($book->name, ENT_QUOTES, 'UTF-8') . '</h1>' . "\n";
 
@@ -73,7 +75,18 @@ class extractor implements content_extractor {
             $tag = $chapter->subchapter ? 'h3' : 'h2';
             $html .= '<' . $tag . '>' . htmlspecialchars($chapter->title, ENT_QUOTES, 'UTF-8')
                 . '</' . $tag . '>' . "\n";
-            $html .= $chapter->content . "\n";
+
+            // Rewrite @@PLUGINFILE@@ tokens to full URLs so that the
+            // H5P embed helper can resolve any embedded H5P content.
+            $content = file_rewrite_pluginfile_urls(
+                $chapter->content,
+                'pluginfile.php',
+                $context->id,
+                'mod_book',
+                'chapter',
+                $chapter->id,
+            );
+            $html .= $content . "\n";
         }
 
         return [

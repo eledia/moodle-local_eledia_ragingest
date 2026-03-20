@@ -55,8 +55,20 @@ class extractor implements content_extractor {
             return null;
         }
 
+        // Rewrite @@PLUGINFILE@@ tokens to full URLs so that the
+        // H5P embed helper can resolve any embedded H5P content.
+        $context = \context_module::instance($cm->id);
+        $content = file_rewrite_pluginfile_urls(
+            $label->intro,
+            'pluginfile.php',
+            $context->id,
+            'mod_label',
+            'intro',
+            0,
+        );
+
         return [
-            'content' => $label->intro,
+            'content' => $content,
             'content_type' => 'text/html',
             'title' => $label->name ?: get_string('pluginname', 'mod_label'),
         ];
