@@ -48,8 +48,12 @@ class extractor implements content_extractor {
     public function extract(\cm_info $cm): ?array {
         global $DB;
 
-        $workshop = $DB->get_record('workshop', ['id' => $cm->instance],
-            'id, name, intro, instructauthors, instructreviewers, conclusion', MUST_EXIST);
+        $workshop = $DB->get_record(
+            'workshop',
+            ['id' => $cm->instance],
+            'id, name, intro, instructauthors, instructreviewers, conclusion',
+            MUST_EXIST,
+        );
 
         $context = \context_module::instance($cm->id);
         $parts = [];
@@ -64,8 +68,12 @@ class extractor implements content_extractor {
         foreach ($fields as $dbfield => $filearea) {
             if (!empty($workshop->$dbfield)) {
                 $parts[] = file_rewrite_pluginfile_urls(
-                    $workshop->$dbfield, 'pluginfile.php', $context->id,
-                    'mod_workshop', $filearea, 0,
+                    $workshop->$dbfield,
+                    'pluginfile.php',
+                    $context->id,
+                    'mod_workshop',
+                    $filearea,
+                    0,
                 );
             }
         }
