@@ -26,8 +26,6 @@ namespace local_ragingest\plugininfo;
 
 use core\plugininfo\base;
 
-defined('MOODLE_INTERNAL') || die();
-
 /**
  * Plugininfo class for ragingestextractor subplugins.
  */

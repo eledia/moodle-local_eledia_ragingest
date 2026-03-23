@@ -72,7 +72,9 @@ final class ingestion_manager_test extends \advanced_testcase {
         \curl::mock_response('{"status": "ok"}');
 
         $manager = new ingestion_manager();
+        ob_start();
         $results = $manager->reindex_course($course->id);
+        ob_end_clean();
 
         // Should have at least one result for the page.
         $pageresult = null;
@@ -151,7 +153,9 @@ final class ingestion_manager_test extends \advanced_testcase {
         \curl::mock_response('{"status": "ok"}');
 
         $manager = new ingestion_manager();
+        ob_start();
         $result = $manager->delete_module(42, 99);
+        ob_end_clean();
 
         $this->assertTrue($result['success']);
         $this->assertEquals('success', $result['status']);

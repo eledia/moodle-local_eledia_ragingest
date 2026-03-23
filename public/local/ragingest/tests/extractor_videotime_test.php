@@ -26,11 +26,22 @@ namespace local_ragingest;
  */
 final class extractor_videotime_test extends \advanced_testcase {
     /**
+     * Skip the current test if mod_videotime generator is not available.
+     */
+    private function require_videotime_generator(): void {
+        $plugindir = \core_component::get_plugin_directory('mod', 'videotime');
+        if (!$plugindir || !file_exists($plugindir . '/tests/generator/lib.php')) {
+            $this->markTestSkipped('mod_videotime generator is not available.');
+        }
+    }
+
+    /**
      * Test that the extractor supports videotime modules.
      */
     public function test_supports_videotime(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
+        $this->require_videotime_generator();
 
         $course = $this->getDataGenerator()->create_course();
         $videotime = $this->getDataGenerator()->create_module('videotime', [
@@ -70,6 +81,7 @@ final class extractor_videotime_test extends \advanced_testcase {
     public function test_extract_returns_transcript(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
+        $this->require_videotime_generator();
 
         $course = $this->getDataGenerator()->create_course();
         $videotime = $this->getDataGenerator()->create_module('videotime', [
@@ -114,6 +126,7 @@ final class extractor_videotime_test extends \advanced_testcase {
     public function test_extract_returns_null_without_tracks(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
+        $this->require_videotime_generator();
 
         $course = $this->getDataGenerator()->create_course();
         $videotime = $this->getDataGenerator()->create_module('videotime', [
@@ -138,6 +151,7 @@ final class extractor_videotime_test extends \advanced_testcase {
 
         $this->resetAfterTest();
         $this->setAdminUser();
+        $this->require_videotime_generator();
 
         $course = $this->getDataGenerator()->create_course();
         $videotime = $this->getDataGenerator()->create_module('videotime', [
@@ -170,6 +184,7 @@ final class extractor_videotime_test extends \advanced_testcase {
     public function test_extract_combines_multiple_tracks(): void {
         $this->resetAfterTest();
         $this->setAdminUser();
+        $this->require_videotime_generator();
 
         $course = $this->getDataGenerator()->create_course();
         $videotime = $this->getDataGenerator()->create_module('videotime', [

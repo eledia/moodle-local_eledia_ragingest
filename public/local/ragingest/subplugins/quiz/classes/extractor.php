@@ -30,7 +30,6 @@ use local_ragingest\content_extractor;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class extractor implements content_extractor {
-
     /**
      * Check whether this extractor supports the given module.
      *
@@ -62,7 +61,12 @@ class extractor implements content_extractor {
         // Quiz intro.
         if (!empty($quiz->intro)) {
             $html .= file_rewrite_pluginfile_urls(
-                $quiz->intro, 'pluginfile.php', $context->id, 'mod_quiz', 'intro', 0,
+                $quiz->intro,
+                'pluginfile.php',
+                $context->id,
+                'mod_quiz',
+                'intro',
+                0,
             );
         }
 
@@ -151,7 +155,12 @@ class extractor implements content_extractor {
         foreach ($feedbacks as $fb) {
             if (!empty($fb->feedbacktext)) {
                 $html .= file_rewrite_pluginfile_urls(
-                    $fb->feedbacktext, 'pluginfile.php', $context->id, 'mod_quiz', 'feedback', $fb->id,
+                    $fb->feedbacktext,
+                    'pluginfile.php',
+                    $context->id,
+                    'mod_quiz',
+                    'feedback',
+                    $fb->id,
                 ) . "\n";
             }
         }

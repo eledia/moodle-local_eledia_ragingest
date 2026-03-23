@@ -29,7 +29,6 @@ use local_ragingest\content_extractor;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class extractor implements content_extractor {
-
     /**
      * Check whether this extractor supports the given module.
      *
@@ -60,7 +59,12 @@ class extractor implements content_extractor {
         // Wiki intro.
         if (!empty($wiki->intro)) {
             $html .= file_rewrite_pluginfile_urls(
-                $wiki->intro, 'pluginfile.php', $context->id, 'mod_wiki', 'intro', 0,
+                $wiki->intro,
+                'pluginfile.php',
+                $context->id,
+                'mod_wiki',
+                'intro',
+                0,
             );
         }
 

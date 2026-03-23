@@ -59,13 +59,23 @@ class extractor implements content_extractor {
 
         if (!empty($assign->intro)) {
             $html .= file_rewrite_pluginfile_urls(
-                $assign->intro, 'pluginfile.php', $context->id, 'mod_assign', 'intro', 0,
+                $assign->intro,
+                'pluginfile.php',
+                $context->id,
+                'mod_assign',
+                'intro',
+                0,
             );
         }
 
         if (!empty($assign->activity)) {
             $html .= file_rewrite_pluginfile_urls(
-                $assign->activity, 'pluginfile.php', $context->id, 'mod_assign', 'activity', 0,
+                $assign->activity,
+                'pluginfile.php',
+                $context->id,
+                'mod_assign',
+                'activity',
+                0,
             );
         }
 

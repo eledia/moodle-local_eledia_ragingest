@@ -56,21 +56,21 @@ class h5p_embed_helper {
             $url = trim(strip_tags($matches[1]));
 
             if (empty($url)) {
-                mtrace('  [h5p_embed_helper] Empty H5P placeholder found — stripping.');
+                debugging('[h5p_embed_helper] Empty H5P placeholder found — stripping.', DEBUG_DEVELOPER);
                 return '';
             }
 
-            mtrace('  [h5p_embed_helper] Found H5P placeholder with URL: ' . $url);
+            debugging('[h5p_embed_helper] Found H5P placeholder with URL: ' . $url, DEBUG_DEVELOPER);
 
             $text = self::extract_text_from_url($url);
 
             if ($text === null || $text === '') {
                 // Cannot resolve — strip the placeholder.
-                mtrace('  [h5p_embed_helper] Could not extract text — placeholder stripped.');
+                debugging('[h5p_embed_helper] Could not extract text — placeholder stripped.', DEBUG_DEVELOPER);
                 return '';
             }
 
-            mtrace('  [h5p_embed_helper] Extracted ' . strlen($text) . ' chars of H5P text.');
+            debugging('[h5p_embed_helper] Extracted ' . strlen($text) . ' chars of H5P text.', DEBUG_DEVELOPER);
 
             // Return the extracted text wrapped in a paragraph.
             return '<p>' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</p>';
@@ -89,36 +89,36 @@ class h5p_embed_helper {
     private static function extract_text_from_url(string $url): ?string {
         // Only handle local Moodle URLs that end in .h5p.
         if (!preg_match('/\.h5p(\?|$)/i', $url)) {
-            mtrace('  [h5p_embed_helper] URL does not end in .h5p — skipping.');
+            debugging('[h5p_embed_helper] URL does not end in .h5p — skipping.', DEBUG_DEVELOPER);
             return null;
         }
 
         try {
             $file = self::resolve_stored_file($url);
         } catch (\Exception $e) {
-            mtrace('  [h5p_embed_helper] File resolution failed: ' . $e->getMessage());
+            debugging('[h5p_embed_helper] File resolution failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
             debugging('h5p_embed_helper: could not resolve file for URL: ' . $url .
                       ' — ' . $e->getMessage(), DEBUG_DEVELOPER);
             return null;
         }
 
         if ($file === null) {
-            mtrace('  [h5p_embed_helper] Could not find stored file for URL.');
+            debugging('[h5p_embed_helper] Could not find stored file for URL.', DEBUG_DEVELOPER);
             return null;
         }
 
-        mtrace('  [h5p_embed_helper] Resolved file: ' . $file->get_filename() .
-               ' (pathnamehash=' . $file->get_pathnamehash() . ')');
+        debugging('[h5p_embed_helper] Resolved file: ' . $file->get_filename() .
+               ' (pathnamehash=' . $file->get_pathnamehash() . ')', DEBUG_DEVELOPER);
 
         // Look up the deployed H5P content by the file's pathnamehash.
         $h5p = \core_h5p\api::get_content_from_pathnamehash($file->get_pathnamehash());
         if ($h5p === null || empty($h5p->jsoncontent)) {
-            mtrace('  [h5p_embed_helper] H5P not deployed yet (no h5p record found). ' .
-                   'View the activity in a browser first to trigger deployment.');
+            debugging('[h5p_embed_helper] H5P not deployed yet (no h5p record found). ' .
+                   'View the activity in a browser first to trigger deployment.', DEBUG_DEVELOPER);
             return null;
         }
 
-        mtrace('  [h5p_embed_helper] Found deployed H5P record (id=' . $h5p->id . '). Extracting text...');
+        debugging('[h5p_embed_helper] Found deployed H5P record (id=' . $h5p->id . '). Extracting text...', DEBUG_DEVELOPER);
 
         return h5p_text_extractor::extract_text_from_json($h5p->jsoncontent);
     }

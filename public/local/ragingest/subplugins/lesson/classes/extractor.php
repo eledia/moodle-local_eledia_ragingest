@@ -60,8 +60,12 @@ class extractor implements content_extractor {
         $context = \context_module::instance($cm->id);
 
         // Get all pages for this lesson.
-        $pages = $DB->get_records('lesson_pages', ['lessonid' => $lesson->id],
-            '', 'id, prevpageid, nextpageid, qtype, title, contents');
+        $pages = $DB->get_records(
+            'lesson_pages',
+            ['lessonid' => $lesson->id],
+            '',
+            'id, prevpageid, nextpageid, qtype, title, contents',
+        );
 
         if (empty($pages)) {
             // Lesson with only an intro is still worth sending.
@@ -69,7 +73,12 @@ class extractor implements content_extractor {
                 return null;
             }
             $introhtml = file_rewrite_pluginfile_urls(
-                $lesson->intro, 'pluginfile.php', $context->id, 'mod_lesson', 'intro', 0,
+                $lesson->intro,
+                'pluginfile.php',
+                $context->id,
+                'mod_lesson',
+                'intro',
+                0,
             );
             return [
                 'content' => $introhtml,
@@ -108,8 +117,12 @@ class extractor implements content_extractor {
         }
 
         // Pre-fetch all answers for this lesson, indexed by pageid.
-        $allanswers = $DB->get_records('lesson_answers', ['lessonid' => $lesson->id],
-            'pageid ASC, id ASC', 'id, pageid, answer, response');
+        $allanswers = $DB->get_records(
+            'lesson_answers',
+            ['lessonid' => $lesson->id],
+            'pageid ASC, id ASC',
+            'id, pageid, answer, response',
+        );
         $answersbypage = [];
         foreach ($allanswers as $a) {
             $answersbypage[$a->pageid][] = $a;
@@ -120,7 +133,12 @@ class extractor implements content_extractor {
 
         if (!empty($lesson->intro)) {
             $html .= file_rewrite_pluginfile_urls(
-                $lesson->intro, 'pluginfile.php', $context->id, 'mod_lesson', 'intro', 0,
+                $lesson->intro,
+                'pluginfile.php',
+                $context->id,
+                'mod_lesson',
+                'intro',
+                0,
             );
         }
 
@@ -134,8 +152,12 @@ class extractor implements content_extractor {
 
             if (!empty($page->contents)) {
                 $html .= file_rewrite_pluginfile_urls(
-                    $page->contents, 'pluginfile.php', $context->id,
-                    'mod_lesson', 'page_contents', $page->id,
+                    $page->contents,
+                    'pluginfile.php',
+                    $context->id,
+                    'mod_lesson',
+                    'page_contents',
+                    $page->id,
                 ) . "\n";
             }
 
@@ -144,14 +166,22 @@ class extractor implements content_extractor {
                 foreach ($answersbypage[$page->id] as $answer) {
                     if (!empty($answer->answer)) {
                         $html .= '<p>' . file_rewrite_pluginfile_urls(
-                            $answer->answer, 'pluginfile.php', $context->id,
-                            'mod_lesson', 'page_answers', $page->id,
+                            $answer->answer,
+                            'pluginfile.php',
+                            $context->id,
+                            'mod_lesson',
+                            'page_answers',
+                            $page->id,
                         ) . '</p>' . "\n";
                     }
                     if (!empty($answer->response)) {
                         $html .= '<p>' . file_rewrite_pluginfile_urls(
-                            $answer->response, 'pluginfile.php', $context->id,
-                            'mod_lesson', 'page_responses', $page->id,
+                            $answer->response,
+                            'pluginfile.php',
+                            $context->id,
+                            'mod_lesson',
+                            'page_responses',
+                            $page->id,
                         ) . '</p>' . "\n";
                     }
                 }
