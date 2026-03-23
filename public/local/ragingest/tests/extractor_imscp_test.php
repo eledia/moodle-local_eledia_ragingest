@@ -153,8 +153,10 @@ final class extractor_imscp_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course();
         $imscp = $this->getDataGenerator()->create_module('imscp', [
             'course' => $course->id,
-            'intro' => '',
         ]);
+
+        // Generator ignores empty intro — force-clear it.
+        $DB->set_field('imscp', 'intro', '', ['id' => $imscp->id]);
 
         // Clear the structure and remove any default files.
         $DB->set_field('imscp', 'structure', '', ['id' => $imscp->id]);

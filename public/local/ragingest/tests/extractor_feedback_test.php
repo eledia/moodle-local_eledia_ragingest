@@ -134,8 +134,11 @@ final class extractor_feedback_test extends \advanced_testcase {
         $feedback = $this->getDataGenerator()->create_module('feedback', [
             'course' => $course->id,
             'name' => 'Only Pagebreak',
-            'intro' => '',
         ]);
+
+        // Generator ignores empty intro — force-clear it and page_after_submit.
+        $DB->set_field('feedback', 'intro', '', ['id' => $feedback->id]);
+        $DB->set_field('feedback', 'page_after_submit', '', ['id' => $feedback->id]);
 
         $DB->insert_record('feedback_item', [
             'feedback' => $feedback->id,
@@ -166,13 +169,17 @@ final class extractor_feedback_test extends \advanced_testcase {
      * Test that extraction returns null for an empty feedback.
      */
     public function test_extract_returns_null_for_empty_feedback(): void {
+        global $DB;
         $this->resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
         $feedback = $this->getDataGenerator()->create_module('feedback', [
             'course' => $course->id,
-            'intro' => '',
         ]);
+
+        // Generator ignores empty intro — force-clear it and page_after_submit.
+        $DB->set_field('feedback', 'intro', '', ['id' => $feedback->id]);
+        $DB->set_field('feedback', 'page_after_submit', '', ['id' => $feedback->id]);
 
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($feedback->cmid);

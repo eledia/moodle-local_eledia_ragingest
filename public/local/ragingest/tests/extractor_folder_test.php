@@ -67,6 +67,7 @@ final class extractor_folder_test extends \advanced_testcase {
      * Test extracting a single text file from a folder.
      */
     public function test_extract_single_text_file(): void {
+        global $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -75,6 +76,9 @@ final class extractor_folder_test extends \advanced_testcase {
             'course' => $course->id,
             'name' => 'Course Resources',
         ]);
+
+        // Generator ignores empty intro — force-clear it so single-file native MIME is used.
+        $DB->set_field('folder', 'intro', '', ['id' => $folder->id]);
 
         $this->add_file_to_folder($folder, 'readme.txt', 'Important course information.', 'text/plain');
 
@@ -126,6 +130,7 @@ final class extractor_folder_test extends \advanced_testcase {
      * Test that unsupported file types are skipped.
      */
     public function test_extract_skips_unsupported_files(): void {
+        global $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -134,6 +139,9 @@ final class extractor_folder_test extends \advanced_testcase {
             'course' => $course->id,
             'name' => 'Image Folder',
         ]);
+
+        // Generator ignores empty intro — force-clear it.
+        $DB->set_field('folder', 'intro', '', ['id' => $folder->id]);
 
         $this->add_file_to_folder($folder, 'photo.png', 'fakepngdata', 'image/png');
 
@@ -150,14 +158,17 @@ final class extractor_folder_test extends \advanced_testcase {
      * Test that extraction returns null for an empty folder.
      */
     public function test_extract_returns_null_for_empty_folder(): void {
+        global $DB;
         $this->resetAfterTest();
         $this->setAdminUser();
 
         $course = $this->getDataGenerator()->create_course();
         $folder = $this->getDataGenerator()->create_module('folder', [
             'course' => $course->id,
-            'intro' => '',
         ]);
+
+        // Generator ignores empty intro — force-clear it.
+        $DB->set_field('folder', 'intro', '', ['id' => $folder->id]);
 
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($folder->cmid);

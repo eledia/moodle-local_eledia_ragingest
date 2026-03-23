@@ -6,7 +6,7 @@ A Moodle local plugin that extracts course content from activity modules and sen
 
 `local_ragingest` bridges Moodle's LMS content with an external vector-database-backed RAG service. When course modules are created, updated, or deleted, the plugin automatically queues ad-hoc tasks that extract content and push it to the configured API endpoint. A manual **Reindex** admin page is also provided for bulk operations.
 
-The plugin uses a **subplugin architecture** (`ragingestextractor`) to support per-activity-type content extraction. Five extractors ship out of the box; adding new ones requires only three files.
+The plugin uses a **subplugin architecture** (`ragingestextractor`) to support per-activity-type content extraction. Seventeen extractors ship out of the box, covering all major core activity modules; adding new ones requires only three files.
 
 ## Features
 
@@ -16,6 +16,7 @@ The plugin uses a **subplugin architecture** (`ragingestextractor`) to support p
 - **Size limit enforcement** — configurable maximum document size; oversized content is skipped
 - **Deterministic source IDs** — format `{tenant}:course{id}:cmid{id}` ensures idempotent upserts
 - **Multi-tenant support** — tenant ID is included in every payload and source ID
+- **H5P placeholder resolution** — automatically detects H5P placeholders embedded in rich-text fields and extracts the educational text from deployed H5P content
 - **Subplugin extensibility** — add support for any activity module without modifying core plugin code
 - **Debug server** — zero-dependency Python mock server for local development and testing
 
@@ -55,6 +56,8 @@ local/ragingest/
 │   ├── ingestion_manager.php      # Central orchestrator
 │   ├── observer.php               # Event observer (queues ad-hoc tasks)
 │   ├── source_id_helper.php       # Deterministic source ID builder
+│   ├── h5p_embed_helper.php       # Resolves H5P placeholders in HTML
+│   ├── h5p_text_extractor.php     # Extracts text from H5P JSON content
 │   ├── plugininfo/
 │   │   └── ragingestextractor.php # Subplugin type info class
 │   └── task/
@@ -66,11 +69,23 @@ local/ragingest/
 │   └── subplugins.json            # Declares ragingestextractor type
 ├── lang/en/local_ragingest.php    # Language strings
 ├── subplugins/                    # Extractor subplugins (see below)
+│   ├── assign/
 │   ├── book/
+│   ├── data/
+│   ├── feedback/
+│   ├── folder/
 │   ├── glossary/
+│   ├── h5pactivity/
+│   ├── imscp/
 │   ├── label/
+│   ├── lesson/
 │   ├── page/
-│   └── resource/
+│   ├── quiz/
+│   ├── resource/
+│   ├── scorm/
+│   ├── videotime/
+│   ├── wiki/
+│   └── workshop/
 ├── tests/                         # PHPUnit test suite
 ├── debug_server.py                # Python mock RAG server
 ├── reindex.php                    # Admin bulk-reindex page
@@ -120,17 +135,50 @@ local/ragingest/
 | `\local_ragingest\source_id_helper` | Builds deterministic source IDs in the format `{tenant}:course{id}:cmid{id}` |
 | `\local_ragingest\task\ingest_module_task` | Ad-hoc task that calls `ingestion_manager::ingest_module()` |
 | `\local_ragingest\task\delete_module_task` | Ad-hoc task that calls `ingestion_manager::delete_module()` |
+| `\local_ragingest\h5p_embed_helper` | Detects `<div class="h5p-placeholder">` in HTML and replaces them with extracted H5P text, or strips them if unresolvable |
+| `\local_ragingest\h5p_text_extractor` | Recursively extracts educational text from H5P JSON content (questions, answers, labels, accordion panels, etc.) |
 | `\local_ragingest\plugininfo\ragingestextractor` | Tells Moodle's plugin manager how to handle the `ragingestextractor` subplugin type |
 
 ## Bundled Extractors
+
+### Simple Content Modules
 
 | Subplugin | Activity | Content Type | Extraction Strategy |
 |---|---|---|---|
 | `ragingestextractor_page` | Page | `text/html` | Returns the page's `content` field |
 | `ragingestextractor_label` | Label | `text/html` | Returns the label's `intro` field |
-| `ragingestextractor_resource` | File (resource) | auto-detected | Reads the main file from Moodle file storage; only sends `text/plain`, `text/html`, and `application/pdf` |
+| `ragingestextractor_assign` | Assignment | `text/html` | Extracts intro + activity instructions (no student submissions) |
+| `ragingestextractor_workshop` | Workshop | `text/html` | Extracts intro, author/reviewer instructions, and conclusion |
+
+### Structured Content Modules
+
+| Subplugin | Activity | Content Type | Extraction Strategy |
+|---|---|---|---|
+| `ragingestextractor_book` | Book | `text/html` | Combines all visible chapters with `<h2>` (chapters) and `<h3>` (subchapters) headings |
 | `ragingestextractor_glossary` | Glossary | `text/html` | Combines all approved entries into an HTML `<dl>` document |
-| `ragingestextractor_book` | Book | `text/html` | Combines all visible chapters into an HTML document with `<h2>` (chapters) and `<h3>` (subchapters) headings |
+| `ragingestextractor_lesson` | Lesson | `text/html` | Walks the page linked-list in navigation order; includes answer options and feedback. Structural pages (cluster, end-of-branch) are skipped |
+| `ragingestextractor_wiki` | Wiki | `text/html` | Extracts intro + all sub-wiki pages' cached HTML content ordered by title |
+| `ragingestextractor_quiz` | Quiz | `text/html` | Resolves quiz slots through the question bank reference chain; extracts question text, answer options, feedback, and overall feedback bands |
+| `ragingestextractor_data` | Database | `text/html` | Extracts intro + all approved records' text-type field values (`text`, `textarea`, `url`, `menu`, etc.) with field labels |
+| `ragingestextractor_feedback` | Feedback | `text/html` | Extracts intro + question/item definitions with multichoice options parsed from the presentation field. User responses are **never** included |
+
+### File-based Modules
+
+| Subplugin | Activity | Content Type | Extraction Strategy |
+|---|---|---|---|
+| `ragingestextractor_resource` | File (resource) | auto-detected | Reads the main file from Moodle file storage; only sends `text/plain`, `text/html`, and `application/pdf` |
+| `ragingestextractor_folder` | Folder | auto-detected | Extracts intro + all supported files (PDF, text, HTML). Single file preserves native MIME type; multiple files are wrapped in HTML |
+
+### Interactive / Package Modules
+
+| Subplugin | Activity | Content Type | Extraction Strategy |
+|---|---|---|---|
+| `ragingestextractor_h5pactivity` | H5P Activity | `text/html` | Extracts educational text from the deployed H5P JSON content (questions, answers, labels, etc.) |
+| `ragingestextractor_imscp` | IMS Content Package | `text/html` | Parses the manifest structure for page ordering and extracts `<body>` content from all HTML pages in the deployed package |
+| `ragingestextractor_scorm` | SCORM | `text/html` | Extracts intro + SCO titles as table of contents. For locally-stored packages, also reads text from HTML launch pages |
+| `ragingestextractor_videotime` | Video Time | `text/plain` | Extracts and concatenates VTT subtitle/caption track text, stripping timestamps and formatting tags |
+
+> **Note:** H5P placeholders embedded in any rich-text field (e.g., a label or page intro) are automatically resolved by the `h5p_embed_helper` during ingestion, regardless of which extractor produced the HTML.
 
 ## API Contract
 
@@ -270,7 +318,7 @@ The server logs every request with colorized output: headers, decoded payload (b
 
 ### PHPUnit
 
-The plugin includes a comprehensive test suite covering all core classes and all five extractors.
+The plugin includes a comprehensive test suite covering all core classes, H5P helpers, and all extractors.
 
 ```bash
 # Run all plugin tests
@@ -282,15 +330,19 @@ vendor/bin/phpunit public/local/ragingest/tests/api_client_test.php
 vendor/bin/phpunit public/local/ragingest/tests/ingestion_manager_test.php
 vendor/bin/phpunit public/local/ragingest/tests/observer_test.php
 
-# Run extractor tests
+# Run H5P helper tests
+vendor/bin/phpunit public/local/ragingest/tests/h5p_embed_helper_test.php
+vendor/bin/phpunit public/local/ragingest/tests/h5p_text_extractor_test.php
+
+# Run extractor tests (examples)
 vendor/bin/phpunit public/local/ragingest/tests/extractor_page_test.php
-vendor/bin/phpunit public/local/ragingest/tests/extractor_label_test.php
-vendor/bin/phpunit public/local/ragingest/tests/extractor_resource_test.php
-vendor/bin/phpunit public/local/ragingest/tests/extractor_glossary_test.php
-vendor/bin/phpunit public/local/ragingest/tests/extractor_book_test.php
+vendor/bin/phpunit public/local/ragingest/tests/extractor_quiz_test.php
+vendor/bin/phpunit public/local/ragingest/tests/extractor_scorm_test.php
 ```
 
 > **Note:** You must have a valid `phpunit.xml` configuration with a `config.php` for a test database (see Moodle's PHPUnit documentation). The `local_ragingest_testsuite` must be registered in `phpunit.xml.dist` or your local `phpunit.xml`.
+> 
+> The `extractor_videotime_test` tests are automatically skipped when `mod_videotime` is not installed (the plugin's test generator is required).
 
 ### Test Coverage
 
@@ -300,11 +352,20 @@ vendor/bin/phpunit public/local/ragingest/tests/extractor_book_test.php
 | `api_client_test` | `is_configured()` with all config permutations, mocked upsert/delete responses |
 | `ingestion_manager_test` | Unconfigured client error, page ingestion end-to-end, unsupported module skipping, delete success, size limit enforcement |
 | `observer_test` | Verifies that create/update/delete events queue the correct ad-hoc task types |
+| `h5p_embed_helper_test` | Placeholder detection, resolution via file storage + H5P table, unresolvable/empty/non-H5P URL stripping |
+| `h5p_text_extractor_test` | Flat and nested JSON structures, blocklist filtering, deduplication, HTML stripping, accordion panels |
 | `extractor_page_test` | `supports()` filtering, content extraction, empty page → null |
 | `extractor_label_test` | `supports()` filtering, intro extraction, empty label → null |
 | `extractor_resource_test` | File storage integration, MIME type filtering (text/plain, text/html, image/png → null) |
 | `extractor_glossary_test` | Multi-entry `<dl>` HTML generation, empty glossary → null, unapproved entries excluded |
 | `extractor_book_test` | Chapter/subchapter hierarchy (`<h2>`/`<h3>`), hidden chapters excluded, empty book → null |
+| `extractor_h5pactivity_test` | Deployed H5P content extraction, undeployed → null, empty JSON → null |
+| `extractor_videotime_test` | VTT parsing (timestamps, formatting tags, voice tags, NOTE/STYLE blocks), multi-track concatenation |
+| `extractor_data_test` | Text-field extraction with field labels, unapproved record exclusion, empty database → null |
+| `extractor_feedback_test` | Multichoice option parsing, pagebreak/captcha skip, label items, empty feedback → null |
+| `extractor_folder_test` | Single file native MIME, multi-file HTML wrapping, unsupported MIME skip, empty folder → null |
+| `extractor_imscp_test` | Manifest structure parsing, nested subitems, HTML body extraction, empty package → null |
+| `extractor_scorm_test` | SCO titles, HTML launch page extraction, intro-only fallback, local vs external packages |
 
 ## Capabilities
 

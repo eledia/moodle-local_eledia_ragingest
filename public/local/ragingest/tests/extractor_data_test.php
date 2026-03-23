@@ -108,13 +108,16 @@ final class extractor_data_test extends \advanced_testcase {
      * Test that extraction returns null for an empty database.
      */
     public function test_extract_returns_null_for_empty_database(): void {
+        global $DB;
         $this->resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
         $data = $this->getDataGenerator()->create_module('data', [
             'course' => $course->id,
-            'intro' => '',
         ]);
+
+        // Generator ignores empty intro — force-clear it.
+        $DB->set_field('data', 'intro', '', ['id' => $data->id]);
 
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($data->cmid);
@@ -137,9 +140,11 @@ final class extractor_data_test extends \advanced_testcase {
         $data = $this->getDataGenerator()->create_module('data', [
             'course' => $course->id,
             'name' => 'Moderated DB',
-            'intro' => '',
             'approval' => 1,
         ]);
+
+        // Generator ignores empty intro — force-clear it.
+        $DB->set_field('data', 'intro', '', ['id' => $data->id]);
 
         // Create a text field.
         $generator = $this->getDataGenerator()->get_plugin_generator('mod_data');

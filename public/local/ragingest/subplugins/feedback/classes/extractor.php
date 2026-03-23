@@ -109,8 +109,10 @@ class extractor implements content_extractor {
                 // For multichoice items, parse answer options from presentation field.
                 // The presentation format is: "r>option1|option2|option3" or "c>option1|option2".
                 // The prefix indicates radio (r), checkbox (c), or dropdown (d).
-                if (in_array($item->typ, ['multichoice', 'multichoicerated'], true)
-                        && !empty($item->presentation)) {
+                if (
+                    in_array($item->typ, ['multichoice', 'multichoicerated'], true)
+                    && !empty($item->presentation)
+                ) {
                     $options = self::parse_multichoice_options($item->presentation);
                     if (!empty($options)) {
                         $html .= '<ul>' . "\n";
