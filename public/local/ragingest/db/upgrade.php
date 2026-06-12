@@ -52,5 +52,13 @@ function xmldb_local_ragingest_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026061300, 'local', 'ragingest');
     }
 
+    if ($oldversion < 2026061301) {
+        // Apply the field lock state from the (new) test-phase setting.
+        \local_ragingest\setup::ensure_course_field();
+        \local_ragingest\setup::sync_field_lock();
+
+        upgrade_plugin_savepoint(true, 2026061301, 'local', 'ragingest');
+    }
+
     return true;
 }

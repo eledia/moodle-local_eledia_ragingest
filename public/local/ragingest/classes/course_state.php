@@ -102,6 +102,38 @@ class course_state {
     }
 
     /**
+     * Queue a reconcile task for every course whose marking and index state
+     * diverge. Shared by the nightly task and the admin-setting callbacks, so
+     * that changing a central list (pilot courses / category allow-list) takes
+     * effect promptly rather than only at the next nightly run.
+     *
+     * @return int Number of reconcile tasks queued.
+     */
+    public static function queue_divergent_reconciles(): int {
+        global $DB;
+
+        if (!(new api_client())->is_configured()) {
+            return 0;
+        }
+
+        $queued = 0;
+        $courses = $DB->get_recordset_select('course', 'id <> :site', ['site' => SITEID], 'id', 'id');
+        foreach ($courses as $course) {
+            $courseid = (int) $course->id;
+            if (course_gate::should_ingest($courseid) === self::is_ingested($courseid)) {
+                continue;
+            }
+            $task = new task\reconcile_course_task();
+            $task->set_custom_data(['courseid' => $courseid]);
+            \core\task\manager::queue_adhoc_task($task, true);
+            $queued++;
+        }
+        $courses->close();
+
+        return $queued;
+    }
+
+    /**
      * Forget a course's state row (e.g. when the course is deleted).
      *
      * @param int $courseid The course id.

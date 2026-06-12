@@ -83,6 +83,32 @@ final class course_state_test extends \advanced_testcase {
     }
 
     /**
+     * queue_divergent_reconciles() queues a task only where marking and state
+     * diverge.
+     */
+    public function test_queue_divergent_reconciles(): void {
+        global $DB;
+        $cat = $this->getDataGenerator()->create_category();
+        set_config('enabledcategories', (string) $cat->id, 'local_ragingest');
+
+        // Marked but not yet ingested → diverges → should be queued.
+        $marked = $this->getDataGenerator()->create_course(['category' => $cat->id]);
+        // Unmarked and not ingested → matches → not queued.
+        $this->getDataGenerator()->create_course();
+
+        $DB->delete_records('task_adhoc',
+            ['classname' => '\\local_ragingest\\task\\reconcile_course_task']);
+
+        $queued = course_state::queue_divergent_reconciles();
+
+        $this->assertSame(1, $queued);
+        $tasks = $DB->get_records('task_adhoc',
+            ['classname' => '\\local_ragingest\\task\\reconcile_course_task']);
+        $this->assertCount(1, $tasks);
+        $this->assertEquals($marked->id, json_decode(reset($tasks)->customdata)->courseid);
+    }
+
+    /**
      * forget() removes the state row (e.g. on course deletion).
      */
     public function test_forget(): void {

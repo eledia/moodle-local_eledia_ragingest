@@ -46,27 +46,12 @@ class reconcile_all_task extends \core\task\scheduled_task {
      * @return void
      */
     public function execute(): void {
-        global $DB;
-
         if (!(new \local_ragingest\api_client())->is_configured()) {
             mtrace('local_ragingest: RAG API not configured — skipping reconcile.');
             return;
         }
 
-        $queued = 0;
-        $courses = $DB->get_recordset_select('course', 'id <> :site', ['site' => SITEID], 'id', 'id');
-        foreach ($courses as $course) {
-            $courseid = (int) $course->id;
-            if (\local_ragingest\course_gate::should_ingest($courseid) === course_state::is_ingested($courseid)) {
-                continue;
-            }
-            $task = new reconcile_course_task();
-            $task->set_custom_data(['courseid' => $courseid]);
-            \core\task\manager::queue_adhoc_task($task, true);
-            $queued++;
-        }
-        $courses->close();
-
+        $queued = course_state::queue_divergent_reconciles();
         mtrace("local_ragingest: queued {$queued} course reconcile task(s).");
     }
 }

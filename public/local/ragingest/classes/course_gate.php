@@ -25,9 +25,13 @@ namespace local_ragingest;
  *
  * 1. **Category allow-list** (admin setting `enabledcategories`): a course is
  *    eligible when its category — or any ancestor category — is on the list.
- * 2. **Per-course override** (the `ragingest` course custom field): `Include`
- *    forces ingestion regardless of category; `Exclude` forbids it regardless
- *    of category; `Default` defers to the category rule.
+ * 2. **Pilot-course list** (admin setting `pilotcourses`): named courses are
+ *    eligible regardless of category. Intended for test/pilot phases where a
+ *    specific set of courses is selected centrally.
+ * 3. **Per-course override** (the `ragingest` course custom field): `Include`
+ *    forces ingestion regardless of the above; `Exclude` forbids it regardless
+ *    of the above; `Default` defers to the admin lists. During a pilot phase the
+ *    field can be locked so only managers/admins set it (see settings.php).
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
@@ -65,7 +69,8 @@ class course_gate {
             return false;
         }
 
-        return self::category_enabled($courseid);
+        // Admin "include" sources: the central pilot list or the category list.
+        return self::in_pilot_list($courseid) || self::category_enabled($courseid);
     }
 
     /**
@@ -95,6 +100,58 @@ class course_gate {
         }
 
         return self::OVERRIDE_DEFAULT;
+    }
+
+    /**
+     * Whether the course is named in the central pilot-course list.
+     *
+     * @param int $courseid The course id.
+     * @return bool
+     */
+    private static function in_pilot_list(int $courseid): bool {
+        return isset(self::pilot_course_ids()[$courseid]);
+    }
+
+    /**
+     * Resolve the configured pilot-course list to a set of course ids.
+     *
+     * Each non-empty line is a course shortname, or a numeric course id when it
+     * matches an existing course. Cached per request, keyed on the raw setting.
+     *
+     * @return array<int, true>
+     */
+    private static function pilot_course_ids(): array {
+        global $DB;
+        static $cache = [];
+
+        $raw = (string) get_config('local_ragingest', 'pilotcourses');
+        if (trim($raw) === '') {
+            return [];
+        }
+        if (array_key_exists($raw, $cache)) {
+            return $cache[$raw];
+        }
+
+        $set = [];
+        foreach (preg_split('/\R/', $raw) ?: [] as $line) {
+            $line = trim($line);
+            if ($line === '') {
+                continue;
+            }
+            // Numeric line that is a real course id.
+            if (ctype_digit($line) && $DB->record_exists('course', ['id' => (int) $line])) {
+                $set[(int) $line] = true;
+                continue;
+            }
+            // Otherwise treat as a (unique) course shortname.
+            $id = $DB->get_field('course', 'id', ['shortname' => $line]);
+            if ($id) {
+                $set[(int) $id] = true;
+            }
+        }
+
+        $cache[$raw] = $set;
+        return $set;
     }
 
     /**

@@ -80,6 +80,63 @@ final class course_gate_test extends \advanced_testcase {
     }
 
     /**
+     * A course named in the central pilot list is ingested regardless of
+     * category, but an explicit Exclude override still wins.
+     */
+    public function test_pilot_course_list(): void {
+        $this->resetAfterTest();
+        setup::ensure_course_field();
+
+        // No categories enabled (opt-in default).
+        set_config('enabledcategories', '', 'local_ragingest');
+
+        $pilot = $this->getDataGenerator()->create_course(['shortname' => 'PILOT-101']);
+        $byid = $this->getDataGenerator()->create_course();
+        $other = $this->getDataGenerator()->create_course(['shortname' => 'NOTPILOT']);
+
+        // One by shortname, one by numeric id.
+        set_config('pilotcourses', "PILOT-101\n{$byid->id}", 'local_ragingest');
+
+        $this->assertTrue(course_gate::should_ingest((int) $pilot->id));
+        $this->assertTrue(course_gate::should_ingest((int) $byid->id));
+        $this->assertFalse(course_gate::should_ingest((int) $other->id));
+
+        // A manager-set Exclude override beats the pilot list.
+        $this->set_override((int) $pilot->id, course_gate::OVERRIDE_EXCLUDE);
+        $this->assertFalse(course_gate::should_ingest((int) $pilot->id));
+    }
+
+    /**
+     * Locking the field removes teacher edit access while a capability holder
+     * (admin) keeps it, and unlocking restores teacher access.
+     */
+    public function test_field_lock_blocks_teachers(): void {
+        global $DB;
+        $this->resetAfterTest();
+        setup::ensure_course_field();
+
+        $course = $this->getDataGenerator()->create_course();
+        $teacher = $this->getDataGenerator()->create_and_enrol($course, 'editingteacher');
+        $fieldid = (int) $DB->get_field('customfield_field', 'id', ['shortname' => course_gate::FIELD]);
+        $handler = \core_course\customfield\course_handler::create();
+
+        // Locked: the editing teacher (no moodle/course:changelockedcustomfields)
+        // cannot edit; an admin (has the capability) can.
+        setup::apply_field_state(true);
+        $field = \core_customfield\field_controller::create($fieldid);
+        $this->setUser($teacher);
+        $this->assertFalse($handler->can_edit($field, (int) $course->id));
+        $this->setAdminUser();
+        $this->assertTrue($handler->can_edit($field, (int) $course->id));
+
+        // Unlocked: the editing teacher can edit again.
+        setup::apply_field_state(false);
+        $field = \core_customfield\field_controller::create($fieldid);
+        $this->setUser($teacher);
+        $this->assertTrue($handler->can_edit($field, (int) $course->id));
+    }
+
+    /**
      * The install/upgrade setup creates the override field, idempotently.
      */
     public function test_ensure_course_field_idempotent(): void {

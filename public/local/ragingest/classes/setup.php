@@ -86,6 +86,59 @@ class setup {
     }
 
     /**
+     * Lock or unlock the per-course override field.
+     *
+     * When locked, editing the field requires
+     * `moodle/course:changelockedcustomfields` (managers/admins only), so
+     * teachers can no longer change a course's ingestion marking — while the
+     * value stays visible (visibility is kept at "everyone"). Used for the
+     * test-phase lock-down (see the `lockcoursemarking` admin setting).
+     *
+     * No-op when the field does not exist yet.
+     *
+     * @param bool $locked Whether the field should be locked.
+     * @return void
+     */
+    public static function apply_field_state(bool $locked): void {
+        global $DB;
+
+        $fieldid = $DB->get_field('customfield_field', 'id', ['shortname' => course_gate::FIELD]);
+        if (!$fieldid) {
+            return;
+        }
+
+        $field = field_controller::create((int) $fieldid);
+        $raw = $field->get('configdata');
+        $configdata = is_array($raw) ? $raw : (json_decode((string) $raw, true) ?: []);
+
+        if ((int) ($configdata['locked'] ?? 0) === ($locked ? 1 : 0)) {
+            return; // Already in the desired state.
+        }
+        $configdata['locked'] = $locked ? 1 : 0;
+        $configdata['visibility'] = $configdata['visibility'] ?? 2;
+
+        $record = (object) [
+            'name' => $field->get('name'),
+            'shortname' => $field->get('shortname'),
+            'type' => $field->get('type'),
+            'description' => $field->get('description'),
+            'descriptionformat' => FORMAT_HTML,
+            'configdata' => $configdata,
+        ];
+
+        $field->get_handler()->save_field_configuration($field, $record);
+    }
+
+    /**
+     * Lock the field if (and only if) the test-phase setting is enabled.
+     *
+     * @return void
+     */
+    public static function sync_field_lock(): void {
+        self::apply_field_state((int) get_config('local_ragingest', 'lockcoursemarking') === 1);
+    }
+
+    /**
      * The custom-field category name (also used to locate it on re-runs).
      *
      * @return string

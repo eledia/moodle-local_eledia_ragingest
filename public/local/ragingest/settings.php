@@ -55,13 +55,47 @@ if ($hassiteconfig) {
     if (during_initial_install() === false) {
         $categoryoptions = \core_course_category::make_categories_list();
     }
-    $settings->add(new admin_setting_configmultiselect(
+    $categorysetting = new admin_setting_configmultiselect(
         'local_ragingest/enabledcategories',
         get_string('enabledcategories', 'local_ragingest'),
         get_string('enabledcategories_desc', 'local_ragingest'),
         [],
         $categoryoptions
-    ));
+    );
+    // Re-evaluate every course's marking promptly when the list changes.
+    $categorysetting->set_updatedcallback(function () {
+        \local_ragingest\course_state::queue_divergent_reconciles();
+    });
+    $settings->add($categorysetting);
+
+    // Central pilot-course list — names specific courses (one shortname or
+    // course id per line) to ingest regardless of category. Intended for
+    // test/pilot phases.
+    $pilotsetting = new admin_setting_configtextarea(
+        'local_ragingest/pilotcourses',
+        get_string('pilotcourses', 'local_ragingest'),
+        get_string('pilotcourses_desc', 'local_ragingest'),
+        '',
+        PARAM_RAW
+    );
+    $pilotsetting->set_updatedcallback(function () {
+        \local_ragingest\course_state::queue_divergent_reconciles();
+    });
+    $settings->add($pilotsetting);
+
+    // Lock teacher editing of the per-course "RAG ingestion" override. When on
+    // (test-phase lock-down), only managers/admins can change a course's
+    // marking; teachers still see it read-only.
+    $locksetting = new admin_setting_configcheckbox(
+        'local_ragingest/lockcoursemarking',
+        get_string('lockcoursemarking', 'local_ragingest'),
+        get_string('lockcoursemarking_desc', 'local_ragingest'),
+        0
+    );
+    $locksetting->set_updatedcallback(function () {
+        \local_ragingest\setup::sync_field_lock();
+    });
+    $settings->add($locksetting);
 
     // Max document size in MB.
     $settings->add(new admin_setting_configtext(

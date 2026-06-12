@@ -80,6 +80,10 @@ $string['cffieldname'] = 'RAG ingestion';
 $string['cffielddesc'] = 'Whether this course\'s content is sent to the AI tutor\'s knowledge base. "Default" follows the site\'s category settings; "Include" always sends; "Exclude" never sends.';
 $string['coursenotmarked'] = 'Course is not marked for ingestion.';
 $string['task_reconcile_all'] = 'Reconcile course ingestion marking';
+$string['pilotcourses'] = 'Pilot courses';
+$string['pilotcourses_desc'] = 'Specific courses to ingest, one per line, by course short name (or numeric course ID). These are ingested regardless of the category allow-list. Useful for a test/pilot phase where only a chosen set of courses should be ingested.';
+$string['lockcoursemarking'] = 'Lock course marking (test phase)';
+$string['lockcoursemarking_desc'] = 'When enabled, only managers and administrators can change a course\'s "RAG ingestion" setting; teachers can see it but not change it. Use this during a test phase so the set of ingested courses is controlled centrally.';
 
 // Extractor content labels.
 $string['alsoknownas'] = 'Also known as:';

@@ -29,5 +29,6 @@
  */
 function xmldb_local_ragingest_install(): bool {
     \local_ragingest\setup::ensure_course_field();
+    \local_ragingest\setup::sync_field_lock();
     return true;
 }
