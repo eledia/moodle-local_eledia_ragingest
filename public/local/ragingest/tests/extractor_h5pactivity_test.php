@@ -65,9 +65,15 @@ final class extractor_h5pactivity_test extends \advanced_testcase {
     }
 
     /**
-     * Test extraction returns null when H5P is not yet deployed.
+     * Test extraction works straight from the package zip, without the H5P
+     * having been deployed (viewed) first.
+     *
+     * This is the deployment-independent path: there is no `h5p` record, so the
+     * extractor reads `content/content.json` directly from the .h5p package.
      */
-    public function test_extract_returns_null_when_not_deployed(): void {
+    public function test_extract_from_undeployed_package(): void {
+        global $DB;
+
         $this->resetAfterTest();
         $this->setAdminUser();
 
@@ -77,14 +83,22 @@ final class extractor_h5pactivity_test extends \advanced_testcase {
             'name' => 'Undeployed H5P',
         ]);
 
+        // Guard: there must be no deployed h5p record for this to exercise the
+        // package-zip fallback rather than the deployed path.
+        $this->assertSame(0, $DB->count_records('h5p'));
+
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($h5p->cmid);
 
         $extractor = new \ragingestextractor_h5pactivity\extractor();
         $result = $extractor->extract($cm);
 
-        // Not deployed → should return null.
-        $this->assertNull($result);
+        // The package (an Accordion fixture) is now indexable without deployment.
+        $this->assertNotNull($result);
+        $this->assertSame('text/plain', $result['content_type']);
+        $this->assertSame('Undeployed H5P', $result['title']);
+        $this->assertStringStartsWith('Undeployed H5P', $result['content']);
+        $this->assertStringContainsString('Section:', $result['content']);
     }
 
     /**

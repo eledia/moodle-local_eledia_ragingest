@@ -259,6 +259,159 @@ final class h5p_text_extractor_test extends \advanced_testcase {
     }
 
     /**
+     * Multiple choice answers are labelled, marking the correct option.
+     */
+    public function test_multichoice_labels_correct_answer(): void {
+        $json = json_encode([
+            'params' => [
+                'question' => '<p>What is the chemical symbol for water?</p>',
+                'answers' => [
+                    ['text' => '<p>H2O</p>', 'correct' => true],
+                    ['text' => '<p>CO2</p>', 'correct' => false],
+                ],
+            ],
+        ]);
+
+        $result = h5p_text_extractor::extract_text_from_json($json);
+
+        $this->assertStringContainsString('Question: What is the chemical symbol for water?', $result);
+        // Short answers survive (no minimum-length filter on known-good fields)
+        // and the correct one is marked.
+        $this->assertStringContainsString('Correct answer: H2O', $result);
+        $this->assertStringContainsString('Answer: CO2', $result);
+    }
+
+    /**
+     * True/False questions surface the correct boolean answer.
+     */
+    public function test_true_false_question(): void {
+        $json = json_encode([
+            'params' => [
+                'question' => '<p>The Earth orbits the Sun.</p>',
+                'correct' => 'true',
+            ],
+        ]);
+
+        $result = h5p_text_extractor::extract_text_from_json($json);
+
+        $this->assertStringContainsString('Question: The Earth orbits the Sun.', $result);
+        $this->assertStringContainsString('Correct answer: True', $result);
+    }
+
+    /**
+     * Drag-text / mark-the-words textField is captured with its *markers*.
+     */
+    public function test_drag_text_field(): void {
+        $json = json_encode([
+            'params' => [
+                'textField' => 'The mitochondria is the *powerhouse* of the cell.',
+            ],
+        ]);
+
+        $result = h5p_text_extractor::extract_text_from_json($json);
+
+        $this->assertStringContainsString('Text: The mitochondria is the *powerhouse* of the cell.', $result);
+    }
+
+    /**
+     * Summary statements mark the first (correct) option in each set.
+     */
+    public function test_summary_statements(): void {
+        $json = json_encode([
+            'params' => [
+                'summaries' => [
+                    ['summary' => [
+                        'Photosynthesis converts light into chemical energy.',
+                        'Photosynthesis produces only carbon dioxide.',
+                    ]],
+                ],
+            ],
+        ]);
+
+        $result = h5p_text_extractor::extract_text_from_json($json);
+
+        $this->assertStringContainsString(
+            'Correct statement: Photosynthesis converts light into chemical energy.', $result);
+        $this->assertStringContainsString(
+            'Statement: Photosynthesis produces only carbon dioxide.', $result);
+    }
+
+    /**
+     * Dialog/flash cards capture both the prompt and the answer.
+     */
+    public function test_dialog_cards(): void {
+        $json = json_encode([
+            'params' => [
+                'dialogs' => [
+                    ['text' => 'What is the capital of Japan?', 'answer' => 'Tokyo'],
+                ],
+            ],
+        ]);
+
+        $result = h5p_text_extractor::extract_text_from_json($json);
+
+        $this->assertStringContainsString('Prompt: What is the capital of Japan?', $result);
+        $this->assertStringContainsString('Answer: Tokyo', $result);
+    }
+
+    /**
+     * Content nested under `action` (Course Presentation, Interactive Video,
+     * Branching Scenario, Interactive Book) is now recursed into — previously
+     * `action` was blocklisted and this content was lost entirely.
+     */
+    public function test_action_nested_content_is_extracted(): void {
+        $json = json_encode([
+            'params' => [
+                'presentation' => [
+                    'slides' => [
+                        [
+                            'elements' => [
+                                [
+                                    'action' => [
+                                        'library' => 'H5P.AdvancedText 1.1',
+                                        'params' => [
+                                            'text' => '<p>Cellular respiration releases energy from glucose.</p>',
+                                        ],
+                                    ],
+                                ],
+                            ],
+                        ],
+                    ],
+                ],
+            ],
+        ]);
+
+        $result = h5p_text_extractor::extract_text_from_json($json);
+
+        $this->assertStringContainsString('Cellular respiration releases energy from glucose.', $result);
+        // The library identifier must not leak as content.
+        $this->assertStringNotContainsString('H5P.AdvancedText', $result);
+    }
+
+    /**
+     * The blocks API returns ordered, de-duplicated, labelled lines.
+     */
+    public function test_blocks_api(): void {
+        $json = json_encode([
+            'params' => [
+                'question' => '<p>Pick the prime number.</p>',
+                'answers' => [
+                    ['text' => '<p>7</p>', 'correct' => true],
+                    ['text' => '<p>8</p>', 'correct' => false],
+                ],
+            ],
+        ]);
+
+        $blocks = h5p_text_extractor::extract_blocks_from_json($json);
+
+        $this->assertSame([
+            'Question: Pick the prime number.',
+            'Correct answer: 7',
+            'Answer: 8',
+        ], $blocks);
+    }
+
+    /**
      * Test extraction from JSON without the 'params' wrapper.
      */
     public function test_json_without_params_wrapper(): void {

@@ -74,21 +74,24 @@ class extractor implements content_extractor {
             return null;
         }
 
-        // Look up the deployed H5P content via the file's pathnamehash.
-        $h5p = \core_h5p\api::get_content_from_pathnamehash($file->get_pathnamehash());
-        if ($h5p === null || empty($h5p->jsoncontent)) {
-            // Not yet deployed — skip.
+        // Resolve the content JSON: the deployed record if available, otherwise
+        // straight from the package zip (so undeployed activities still index).
+        $json = h5p_text_extractor::jsoncontent_from_file($file);
+        if ($json === null) {
             return null;
         }
 
-        $text = h5p_text_extractor::extract_text_from_json($h5p->jsoncontent);
-
+        $text = h5p_text_extractor::extract_text_from_json($json);
         if ($text === '') {
             return null;
         }
 
+        // Prepend the activity name as a heading so retrieval keeps the title
+        // context (the API payload itself carries no separate title field).
+        $content = $activity->name . "\n\n" . $text;
+
         return [
-            'content' => $text,
+            'content' => $content,
             'content_type' => 'text/plain',
             'title' => $activity->name,
         ];

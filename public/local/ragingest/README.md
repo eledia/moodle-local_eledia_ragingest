@@ -16,7 +16,9 @@ The plugin uses a **subplugin architecture** (`ragingestextractor`) to support p
 - **Size limit enforcement** — configurable maximum document size; oversized content is skipped
 - **Deterministic source IDs** — format `{tenant}:course{id}:cmid{id}` ensures idempotent upserts
 - **Multi-tenant support** — tenant ID is included in every payload and source ID
-- **H5P placeholder resolution** — automatically detects H5P placeholders embedded in rich-text fields and extracts the educational text from deployed H5P content
+- **Structure-aware H5P extraction** — recognises the common H5P shapes (multiple/single choice, true/false, fill-in-the-blanks, drag text, mark the words, summary, dialog/flash cards, accordion, and the `action`-nested interactive types: Course Presentation, Interactive Video, Branching Scenario, Interactive Book) and emits **labelled** text (`Question:` / `Correct answer:` / `Answer:` / `Cloze:` / `Section:`) so the question↔answer relationship survives into the embeddings; unknown types fall back to a generic content walk
+- **Deployment-independent H5P** — content is read straight from the `.h5p` package (`content/content.json`) when the activity has not been deployed/viewed yet, so it is indexable immediately (the deployed record is still used when present)
+- **H5P placeholder resolution** — detects H5P embedded in rich-text fields and inlines the extracted, labelled text (each block as its own paragraph)
 - **Subplugin extensibility** — add support for any activity module without modifying core plugin code
 - **Debug server** — zero-dependency Python mock server for local development and testing
 
@@ -136,7 +138,7 @@ local/ragingest/
 | `\local_ragingest\task\ingest_module_task` | Ad-hoc task that calls `ingestion_manager::ingest_module()` |
 | `\local_ragingest\task\delete_module_task` | Ad-hoc task that calls `ingestion_manager::delete_module()` |
 | `\local_ragingest\h5p_embed_helper` | Detects `<div class="h5p-placeholder">` in HTML and replaces them with extracted H5P text, or strips them if unresolvable |
-| `\local_ragingest\h5p_text_extractor` | Recursively extracts educational text from H5P JSON content (questions, answers, labels, accordion panels, etc.) |
+| `\local_ragingest\h5p_text_extractor` | Structure-aware extraction of labelled text from H5P content JSON (questions, correct/incorrect answers, cloze, cards, summaries, accordion, `action`-nested interactive types); resolves the content JSON from the deployed record or directly from the `.h5p` package zip |
 | `\local_ragingest\plugininfo\ragingestextractor` | Tells Moodle's plugin manager how to handle the `ragingestextractor` subplugin type |
 
 ## Bundled Extractors
@@ -173,7 +175,7 @@ local/ragingest/
 
 | Subplugin | Activity | Content Type | Extraction Strategy |
 |---|---|---|---|
-| `ragingestextractor_h5pactivity` | H5P Activity | `text/html` | Extracts educational text from the deployed H5P JSON content (questions, answers, labels, etc.) |
+| `ragingestextractor_h5pactivity` | H5P Activity | `text/plain` | Labelled educational text from the H5P content (questions, correct/incorrect answers, cloze, cards, summaries, accordion, nested interactive types), prefixed with the activity name. Works without prior deployment by reading the package directly. |
 | `ragingestextractor_imscp` | IMS Content Package | `text/html` | Parses the manifest structure for page ordering and extracts `<body>` content from all HTML pages in the deployed package |
 | `ragingestextractor_scorm` | SCORM | `text/html` | Extracts intro + SCO titles as table of contents. For locally-stored packages, also reads text from HTML launch pages |
 | `ragingestextractor_videotime` | Video Time | `text/plain` | Extracts and concatenates VTT subtitle/caption track text, stripping timestamps and formatting tags |
@@ -353,7 +355,7 @@ vendor/bin/phpunit public/local/ragingest/tests/extractor_scorm_test.php
 | `ingestion_manager_test` | Unconfigured client error, page ingestion end-to-end, unsupported module skipping, delete success, size limit enforcement |
 | `observer_test` | Verifies that create/update/delete events queue the correct ad-hoc task types |
 | `h5p_embed_helper_test` | Placeholder detection, resolution via file storage + H5P table, unresolvable/empty/non-H5P URL stripping |
-| `h5p_text_extractor_test` | Flat and nested JSON structures, blocklist filtering, deduplication, HTML stripping, accordion panels |
+| `h5p_text_extractor_test` | Flat and nested JSON, blocklist filtering, deduplication, HTML stripping, accordion panels, semantic labelling (multichoice/true-false/drag-text/summary/cards), `action`-nested interactive content, the blocks API |
 | `extractor_page_test` | `supports()` filtering, content extraction, empty page → null |
 | `extractor_label_test` | `supports()` filtering, intro extraction, empty label → null |
 | `extractor_resource_test` | File storage integration, MIME type filtering (text/plain, text/html, image/png → null) |

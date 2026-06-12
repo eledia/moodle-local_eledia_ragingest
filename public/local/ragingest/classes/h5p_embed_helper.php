@@ -56,71 +56,60 @@ class h5p_embed_helper {
             $url = trim(strip_tags($matches[1]));
 
             if (empty($url)) {
-                debugging('[h5p_embed_helper] Empty H5P placeholder found — stripping.', DEBUG_DEVELOPER);
                 return '';
             }
 
-            debugging('[h5p_embed_helper] Found H5P placeholder with URL: ' . $url, DEBUG_DEVELOPER);
+            $blocks = self::extract_blocks_from_url($url);
 
-            $text = self::extract_text_from_url($url);
-
-            if ($text === null || $text === '') {
-                // Cannot resolve — strip the placeholder.
-                debugging('[h5p_embed_helper] Could not extract text — placeholder stripped.', DEBUG_DEVELOPER);
+            if (empty($blocks)) {
+                // Cannot resolve (not an .h5p, file missing, or no content) — strip.
                 return '';
             }
 
-            debugging('[h5p_embed_helper] Extracted ' . strlen($text) . ' chars of H5P text.', DEBUG_DEVELOPER);
-
-            // Return the extracted text wrapped in a paragraph.
-            return '<p>' . htmlspecialchars($text, ENT_QUOTES, 'UTF-8') . '</p>';
+            // Render each labelled block as its own paragraph so the structure
+            // (question / answer / section) survives into the ingested HTML.
+            $paragraphs = array_map(
+                static fn($b) => '<p>' . htmlspecialchars($b, ENT_QUOTES, 'UTF-8') . '</p>',
+                $blocks,
+            );
+            return implode('', $paragraphs);
         }, $html);
     }
 
     /**
-     * Attempt to extract text from an H5P content URL.
+     * Attempt to extract labelled text blocks from an H5P content URL.
      *
-     * Resolves the URL to a Moodle stored_file, looks up the deployed
-     * H5P record via pathnamehash, and extracts text from jsoncontent.
+     * Resolves the URL to a Moodle stored_file and reads its content JSON via
+     * {@see h5p_text_extractor::jsoncontent_from_file()} (deployed record, or
+     * the package zip as a fallback), then extracts labelled blocks.
      *
      * @param string $url The pluginfile URL pointing to the .h5p file.
-     * @return string|null Extracted text, or null if not resolvable.
+     * @return string[] Extracted text blocks (empty if not resolvable).
      */
-    private static function extract_text_from_url(string $url): ?string {
+    private static function extract_blocks_from_url(string $url): array {
         // Only handle local Moodle URLs that end in .h5p.
         if (!preg_match('/\.h5p(\?|$)/i', $url)) {
-            debugging('[h5p_embed_helper] URL does not end in .h5p — skipping.', DEBUG_DEVELOPER);
-            return null;
+            return [];
         }
 
         try {
             $file = self::resolve_stored_file($url);
         } catch (\Exception $e) {
+            // Malformed pluginfile URL — unusual enough to be worth a breadcrumb.
             debugging('[h5p_embed_helper] File resolution failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
-            debugging('h5p_embed_helper: could not resolve file for URL: ' . $url .
-                      ' — ' . $e->getMessage(), DEBUG_DEVELOPER);
-            return null;
+            return [];
         }
 
         if ($file === null) {
-            debugging('[h5p_embed_helper] Could not find stored file for URL.', DEBUG_DEVELOPER);
-            return null;
+            return [];
         }
 
-        debugging('[h5p_embed_helper] Resolved file: ' . $file->get_filename() .
-               ' (pathnamehash=' . $file->get_pathnamehash() . ')', DEBUG_DEVELOPER);
-
-        // Look up the deployed H5P content by the file's pathnamehash.
-        $h5p = \core_h5p\api::get_content_from_pathnamehash($file->get_pathnamehash());
-        if ($h5p === null || empty($h5p->jsoncontent)) {
-            debugging('[h5p_embed_helper] H5P not deployed yet (no h5p record found). ' .
-                   'View the activity in a browser first to trigger deployment.', DEBUG_DEVELOPER);
-            return null;
+        $json = h5p_text_extractor::jsoncontent_from_file($file);
+        if ($json === null) {
+            return [];
         }
 
-        debugging('[h5p_embed_helper] Found deployed H5P record (id=' . $h5p->id . '). Extracting text...', DEBUG_DEVELOPER);
-
-        return h5p_text_extractor::extract_text_from_json($h5p->jsoncontent);
+        return h5p_text_extractor::extract_blocks_from_json($json);
     }
 
     /**
