@@ -44,14 +44,9 @@ if ($hassiteconfig) {
         ''
     ));
 
-    // Tenant ID.
-    $settings->add(new admin_setting_configtext(
-        'local_ragingest/tenant_id',
-        get_string('tenant_id', 'local_ragingest'),
-        get_string('tenant_id_desc', 'local_ragingest'),
-        '',
-        PARAM_ALPHANUMEXT
-    ));
+    // Note: there is deliberately NO tenant setting. The tenant identity is
+    // derived from $CFG->wwwroot (see \local_ragingest\tenant), matching what
+    // the RAG service verifies on the retrieval path.
 
     // Max document size in MB.
     $settings->add(new admin_setting_configtext(

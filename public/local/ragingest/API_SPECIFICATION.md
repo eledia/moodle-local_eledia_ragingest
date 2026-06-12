@@ -1,9 +1,17 @@
 # RAG Ingestion API Specification
 
-> **Version:** 1.1  
+> **Version:** 1.2  
 > **Date:** June 2026  
 > **Audience:** RAG service developers  
 > **Consumer:** `local_ragingest` Moodle plugin
+>
+> **Changelog 1.1 → 1.2:** `tenant_id` is no longer a free-text Moodle setting —
+> it is **derived from the site's `wwwroot`** (canonical form, see
+> [Tenant identity](#tenant-identity)). New metadata field `site_url` carries
+> the raw `wwwroot`. API keys are **per customer**; the service must verify
+> that the payload's site matches the key's registered tenant and reject
+> mismatches. At query time, resolve the tenant from the **verified**
+> `site.url` of the Moodle token callback using the same canonicalisation.
 >
 > **Changelog 1.0 → 1.1:** `source_id` may now carry an optional `:{suffix}`
 > identifying a sub-document within a module (e.g. one file in a Folder). The
@@ -29,10 +37,36 @@ This document describes the HTTP API that the RAG service **must** implement for
 Every request includes the header:
 
 ```
-X-API-Key: <shared secret>
+X-API-Key: <per-customer secret>
 ```
 
 The service **must** reject requests with a missing or invalid key with `401 Unauthorized` or `403 Forbidden`.
+
+**Keys are issued per customer (per tenant), not shared.** When a key is
+issued, register the customer's Moodle site URL(s) with it. On every upsert,
+verify that the payload's tenant (`qdrant_metadata.tenant_id` /
+`qdrant_metadata.site_url`) matches the key's registered tenant and reject
+mismatches with `403` — this prevents a misconfigured site (e.g. a staging
+clone holding a copied key) from writing into another tenant's corpus.
+
+### Tenant identity
+
+The tenant is **derived, never configured**: the plugin computes it from the
+site's `wwwroot` and the service resolves the *same* identity at query time
+from the **verified** `site.url` returned by the Moodle token callback
+(`moodle_verify_user_context`). Both sides apply this canonicalisation:
+
+1. Take the lowercased host, plus the path when Moodle runs in a subdirectory.
+2. Join host and path with `-`; replace every character outside `[a-z0-9._-]`
+   with `-`; trim leading/trailing `-`/`.`.
+
+Examples: `https://moodle.uni-x.de` → `moodle.uni-x.de`;
+`https://Example.com/Lms/` → `example.com-lms`.
+
+Because the identity is derived on the write path and *verified* on the read
+path, tenant collisions and write/read drift are impossible by construction.
+A tenant key changes only if the site's `wwwroot` changes — treat that as a
+tenant migration (rename the tenant or reindex the site).
 
 ### Retry Behaviour (client-side)
 
@@ -70,11 +104,12 @@ POST /documents/upsert
 
 ```json
 {
-    "source_id": "my-tenant:course42:cmid99",
+    "source_id": "moodle.example.com:course42:cmid99",
     "content": "<base64-encoded string>",
     "content_type": "text/html",
     "qdrant_metadata": {
-        "tenant_id": "my-tenant",
+        "tenant_id": "moodle.example.com",
+        "site_url": "https://moodle.example.com",
         "course_id": "42",
         "cmid": "99",
         "module_url": "https://moodle.example.com/mod/page/view.php?id=99"
@@ -91,7 +126,8 @@ POST /documents/upsert
 | `content` | string | ✅ | The document content, **base64-encoded**. The service must decode before processing. |
 | `content_type` | string | ✅ | MIME type of the decoded content. One of the values listed below. |
 | `qdrant_metadata` | object | ✅ | Metadata to store alongside the document vectors (see sub-fields). |
-| `qdrant_metadata.tenant_id` | string | ✅ | Identifies the Moodle instance in multi-tenant deployments. Defaults to `"default"` if unconfigured. |
+| `qdrant_metadata.tenant_id` | string | ✅ | The site's **derived** tenant identity (see [Tenant identity](#tenant-identity)). Verify it against the API key's registered tenant. |
+| `qdrant_metadata.site_url` | string | ✅ | The site's raw `wwwroot`. Use for key↔site verification and operational debugging. |
 | `qdrant_metadata.course_id` | string | ✅ | Moodle course ID (sent as string). |
 | `qdrant_metadata.cmid` | string | ✅ | Moodle course module ID (sent as string). |
 | `qdrant_metadata.module_url` | string | ✅ | Direct URL to the activity in Moodle (for citation/linking in RAG responses). |
@@ -127,13 +163,13 @@ suffix to the module-level id:
 
 | Component | Example | Description |
 |---|---|---|
-| `tenant_id` | `uni-heidelberg` | Alphanumeric + hyphens/underscores. Falls back to `default`. |
+| `tenant_id` | `moodle.uni-x.de` | The **derived** tenant identity ([Tenant identity](#tenant-identity)): characters `[a-z0-9._-]`, never `:`. |
 | `course_id` | `42` | Integer, Moodle course ID |
 | `cmid` | `99` | Integer, Moodle course module ID |
 | `suffix` | `file3`, `chapter2` | Optional. Identifies one sub-document within a module. Opaque to the service. |
 
-Full examples: `uni-heidelberg:course42:cmid99` (module-level),
-`uni-heidelberg:course42:cmid99:file3` (one file inside that module).
+Full examples: `moodle.uni-x.de:course42:cmid99` (module-level),
+`moodle.uni-x.de:course42:cmid99:file3` (one file inside that module).
 
 > **Prefix rule (important for deletion):** the module-level id is always a
 > **prefix** of all its sub-document ids, with `:` as the separator. The service
@@ -313,11 +349,12 @@ curl -X POST http://localhost:8001/documents/upsert \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
   -d '{
-    "source_id": "default:course2:cmid15",
+    "source_id": "moodle.example.com:course2:cmid15",
     "content": "PGgxPkhlbGxvIFdvcmxkPC9oMT4=",
     "content_type": "text/html",
     "qdrant_metadata": {
-      "tenant_id": "default",
+      "tenant_id": "moodle.example.com",
+      "site_url": "https://moodle.example.com",
       "course_id": "2",
       "cmid": "15",
       "module_url": "https://moodle.example.com/mod/page/view.php?id=15"
@@ -350,7 +387,7 @@ curl -X POST http://localhost:8001/documents/delete \
 
 4. **Metadata filtering** — The `qdrant_metadata` fields (`tenant_id`, `course_id`, `cmid`) should be indexed to support filtered vector search (e.g., "search only within course 42").
 
-5. **Multi-tenant isolation** — Use `tenant_id` to ensure queries from one Moodle instance cannot retrieve documents from another.
+5. **Multi-tenant isolation** — Filter every vector query by `tenant_id`. Resolve the querying tenant from the **verified** `site.url` of the Moodle token callback (`moodle_verify_user_context`), canonicalised exactly as in [Tenant identity](#tenant-identity) — never from a value the client merely claims. Keys are per customer; verify key↔tenant on every write.
 
 6. **Large documents** — The plugin enforces a configurable size limit (default 20 MB) before sending. The service may impose its own limits and respond with `413`.
 

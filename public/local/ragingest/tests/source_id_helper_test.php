@@ -26,28 +26,18 @@ namespace local_ragingest;
  */
 final class source_id_helper_test extends \advanced_testcase {
     /**
-     * Test building source IDs from raw course/cmid values with default tenant.
+     * Test that the tenant prefix is derived from wwwroot, not configured.
      */
-    public function test_build_from_ids_default_tenant(): void {
+    public function test_build_from_ids_derives_tenant_from_wwwroot(): void {
         $this->resetAfterTest();
 
-        // No tenant configured — should use 'default'.
-        set_config('tenant_id', '', 'local_ragingest');
+        $expectedtenant = tenant::id();
+        $this->assertNotSame('', $expectedtenant);
 
         $sourceid = source_id_helper::build_from_ids(42, 99);
-        $this->assertEquals('default:course42:cmid99', $sourceid);
-    }
-
-    /**
-     * Test building source IDs with a configured tenant.
-     */
-    public function test_build_from_ids_custom_tenant(): void {
-        $this->resetAfterTest();
-
-        set_config('tenant_id', 'uni-heidelberg', 'local_ragingest');
-
-        $sourceid = source_id_helper::build_from_ids(123, 456);
-        $this->assertEquals('uni-heidelberg:course123:cmid456', $sourceid);
+        $this->assertEquals("{$expectedtenant}:course42:cmid99", $sourceid);
+        // The tenant component never contains the ':' separator.
+        $this->assertStringNotContainsString(':', $expectedtenant);
     }
 
     /**
@@ -55,8 +45,6 @@ final class source_id_helper_test extends \advanced_testcase {
      */
     public function test_build_from_ids_is_deterministic(): void {
         $this->resetAfterTest();
-
-        set_config('tenant_id', 'test', 'local_ragingest');
 
         $first = source_id_helper::build_from_ids(10, 20);
         $second = source_id_helper::build_from_ids(10, 20);
@@ -69,8 +57,6 @@ final class source_id_helper_test extends \advanced_testcase {
     public function test_build_from_cm_info(): void {
         $this->resetAfterTest();
 
-        set_config('tenant_id', 'eledia', 'local_ragingest');
-
         $course = $this->getDataGenerator()->create_course();
         $page = $this->getDataGenerator()->create_module('page', [
             'course' => $course->id,
@@ -82,7 +68,7 @@ final class source_id_helper_test extends \advanced_testcase {
 
         $sourceid = source_id_helper::build($cm);
 
-        $expected = "eledia:course{$course->id}:cmid{$page->cmid}";
+        $expected = tenant::id() . ":course{$course->id}:cmid{$page->cmid}";
         $this->assertEquals($expected, $sourceid);
     }
 
@@ -92,7 +78,6 @@ final class source_id_helper_test extends \advanced_testcase {
      */
     public function test_build_sub(): void {
         $this->resetAfterTest();
-        set_config('tenant_id', 'eledia', 'local_ragingest');
 
         $course = $this->getDataGenerator()->create_course();
         $page = $this->getDataGenerator()->create_module('page',

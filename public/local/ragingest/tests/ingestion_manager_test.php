@@ -35,7 +35,6 @@ final class ingestion_manager_test extends \advanced_testcase {
         // Configure the plugin so the api_client reports configured.
         set_config('rag_endpoint_url', 'http://localhost:8001/documents/upsert', 'local_ragingest');
         set_config('rag_api_key', 'test-key', 'local_ragingest');
-        set_config('tenant_id', 'test-tenant', 'local_ragingest');
         set_config('max_document_size_mb', '20', 'local_ragingest');
     }
 

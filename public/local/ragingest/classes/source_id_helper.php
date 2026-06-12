@@ -45,7 +45,7 @@ class source_id_helper {
      * @return string The deterministic source ID.
      */
     public static function build_from_ids(int $courseid, int $cmid): string {
-        $tenant = get_config('local_ragingest', 'tenant_id') ?: 'default';
+        $tenant = tenant::id();
         return "{$tenant}:course{$courseid}:cmid{$cmid}";
     }
 

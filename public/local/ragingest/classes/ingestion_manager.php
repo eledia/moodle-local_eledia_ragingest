@@ -425,6 +425,7 @@ class ingestion_manager {
      * @return array The payload array ready for JSON encoding.
      */
     private function build_payload(\cm_info $cm, array $document, string $sourceid): array {
+        global $CFG;
         $moduleurl = new \moodle_url('/mod/' . $cm->modname . '/view.php', ['id' => $cm->id]);
 
         return [
@@ -432,7 +433,10 @@ class ingestion_manager {
             'content' => base64_encode($document['content']),
             'content_type' => $document['content_type'],
             'qdrant_metadata' => [
-                'tenant_id' => get_config('local_ragingest', 'tenant_id') ?: 'default',
+                // Derived from wwwroot — the same canonical identity the RAG
+                // server resolves at query time from the verified site.url.
+                'tenant_id' => tenant::id(),
+                'site_url' => (string) $CFG->wwwroot,
                 'course_id' => (string) $cm->course,
                 'cmid' => (string) $cm->id,
                 'module_url' => $moduleurl->out(false),
