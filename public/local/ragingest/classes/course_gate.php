@@ -61,16 +61,34 @@ class course_gate {
             return false;
         }
 
-        $override = self::override($courseid);
-        if ($override === self::OVERRIDE_INCLUDE) {
-            return true;
-        }
-        if ($override === self::OVERRIDE_EXCLUDE) {
-            return false;
+        // While course marking is locked (test phase), the per-course override
+        // has no effect at all: the central admin lists are the sole source of
+        // truth. Otherwise the override is the most specific rule and wins.
+        if (!self::marking_locked()) {
+            $override = self::override($courseid);
+            if ($override === self::OVERRIDE_INCLUDE) {
+                return true;
+            }
+            if ($override === self::OVERRIDE_EXCLUDE) {
+                return false;
+            }
         }
 
         // Admin "include" sources: the central pilot list or the category list.
         return self::in_pilot_list($courseid) || self::category_enabled($courseid);
+    }
+
+    /**
+     * Whether course-level marking is locked (test phase).
+     *
+     * When locked, {@see should_ingest()} ignores the per-course override
+     * entirely, and the custom field is locked against teacher editing
+     * (see settings.php / setup::sync_field_lock()).
+     *
+     * @return bool
+     */
+    public static function marking_locked(): bool {
+        return (int) get_config('local_ragingest', 'lockcoursemarking') === 1;
     }
 
     /**

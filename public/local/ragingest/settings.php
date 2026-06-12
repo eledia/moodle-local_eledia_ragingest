@@ -94,6 +94,9 @@ if ($hassiteconfig) {
     );
     $locksetting->set_updatedcallback(function () {
         \local_ragingest\setup::sync_field_lock();
+        // Toggling the lock changes which rules apply (overrides become inert
+        // or effective again) — reconcile affected courses promptly.
+        \local_ragingest\course_state::queue_divergent_reconciles();
     });
     $settings->add($locksetting);
 

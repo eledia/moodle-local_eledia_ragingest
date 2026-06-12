@@ -83,7 +83,7 @@ $string['task_reconcile_all'] = 'Reconcile course ingestion marking';
 $string['pilotcourses'] = 'Pilot courses';
 $string['pilotcourses_desc'] = 'Specific courses to ingest, one per line, by course short name (or numeric course ID). These are ingested regardless of the category allow-list. Useful for a test/pilot phase where only a chosen set of courses should be ingested.';
 $string['lockcoursemarking'] = 'Lock course marking (test phase)';
-$string['lockcoursemarking_desc'] = 'When enabled, only managers and administrators can change a course\'s "RAG ingestion" setting; teachers can see it but not change it. Use this during a test phase so the set of ingested courses is controlled centrally.';
+$string['lockcoursemarking_desc'] = 'When enabled, the per-course "RAG ingestion" setting has no effect at all — only the pilot-course list and the category allow-list decide what is ingested, and the course field is locked against teacher editing (visible read-only). Use this during a test phase so the set of ingested courses is controlled exclusively in this admin page. Existing per-course values are kept and become effective again when the lock is disabled.';
 
 // Extractor content labels.
 $string['alsoknownas'] = 'Also known as:';

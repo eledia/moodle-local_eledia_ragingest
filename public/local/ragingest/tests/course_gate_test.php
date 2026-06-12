@@ -107,6 +107,40 @@ final class course_gate_test extends \advanced_testcase {
     }
 
     /**
+     * While marking is locked, per-course overrides are inert in BOTH
+     * directions: Include cannot add a course, Exclude cannot remove one —
+     * only the central lists decide. Unlocking restores the overrides.
+     */
+    public function test_lock_makes_overrides_inert(): void {
+        $this->resetAfterTest();
+        setup::ensure_course_field();
+
+        $cat = $this->getDataGenerator()->create_category();
+        set_config('enabledcategories', '', 'local_ragingest');
+
+        // Course A: Include override, not in any central list.
+        $included = $this->getDataGenerator()->create_course();
+        $this->set_override((int) $included->id, course_gate::OVERRIDE_INCLUDE);
+
+        // Course B: Exclude override, but named in the pilot list.
+        $excluded = $this->getDataGenerator()->create_course(['shortname' => 'PILOT-X']);
+        $this->set_override((int) $excluded->id, course_gate::OVERRIDE_EXCLUDE);
+        set_config('pilotcourses', 'PILOT-X', 'local_ragingest');
+
+        // Unlocked: overrides win (sanity).
+        set_config('lockcoursemarking', 0, 'local_ragingest');
+        $this->assertTrue(course_gate::should_ingest((int) $included->id));
+        $this->assertFalse(course_gate::should_ingest((int) $excluded->id));
+
+        // Locked: overrides are ignored — only the central lists decide.
+        set_config('lockcoursemarking', 1, 'local_ragingest');
+        $this->assertFalse(course_gate::should_ingest((int) $included->id),
+            'Include override must be inert while marking is locked.');
+        $this->assertTrue(course_gate::should_ingest((int) $excluded->id),
+            'Exclude override must be inert while marking is locked.');
+    }
+
+    /**
      * Locking the field removes teacher edit access while a capability holder
      * (admin) keeps it, and unlocking restores teacher access.
      */
