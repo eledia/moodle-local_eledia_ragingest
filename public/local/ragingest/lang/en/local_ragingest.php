@@ -73,6 +73,10 @@ $string['deletionfailed'] = 'Deletion failed: source_id={$a->source_id}, HTTP {$
 $string['taskingestion'] = 'RAG content ingestion';
 $string['taskdeletion'] = 'RAG content deletion';
 
+// Extractor content labels.
+$string['alsoknownas'] = 'Also known as:';
+$string['questionhint'] = 'Hint:';
+
 // Capabilities.
 $string['ragingest:reindex'] = 'Reindex course content for RAG ingestion';
 

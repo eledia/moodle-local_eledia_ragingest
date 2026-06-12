@@ -16,6 +16,8 @@ The plugin uses a **subplugin architecture** (`ragingestextractor`) to support p
 - **Size limit enforcement** — configurable maximum document size; oversized content is skipped
 - **Deterministic source IDs** — format `{tenant}:course{id}:cmid{id}` ensures idempotent upserts
 - **Multi-tenant support** — tenant ID is included in every payload and source ID
+- **Activity-name heading** — every document is prefixed centrally with the activity's name (as an `<h1>` for HTML, a title line for plain text) so each chunk the RAG service derives is attributable to its activity; skipped for binary PDFs and when an extractor already supplies its own leading heading
+- **Descriptions & synonyms indexed** — activity intros are captured where previously dropped (glossary, Video Time, H5P), glossary entry **aliases** are indexed as synonyms, and quiz question **hints** are included alongside questions and answers
 - **Structure-aware H5P extraction** — recognises the common H5P shapes (multiple/single choice, true/false, fill-in-the-blanks, drag text, mark the words, summary, dialog/flash cards, accordion, and the `action`-nested interactive types: Course Presentation, Interactive Video, Branching Scenario, Interactive Book) and emits **labelled** text (`Question:` / `Correct answer:` / `Answer:` / `Cloze:` / `Section:`) so the question↔answer relationship survives into the embeddings; unknown types fall back to a generic content walk
 - **Deployment-independent H5P** — content is read straight from the `.h5p` package (`content/content.json`) when the activity has not been deployed/viewed yet, so it is indexable immediately (the deployed record is still used when present)
 - **H5P placeholder resolution** — detects H5P embedded in rich-text fields and inlines the extracted, labelled text (each block as its own paragraph)
@@ -157,10 +159,10 @@ local/ragingest/
 | Subplugin | Activity | Content Type | Extraction Strategy |
 |---|---|---|---|
 | `ragingestextractor_book` | Book | `text/html` | Combines all visible chapters with `<h2>` (chapters) and `<h3>` (subchapters) headings |
-| `ragingestextractor_glossary` | Glossary | `text/html` | Combines all approved entries into an HTML `<dl>` document |
+| `ragingestextractor_glossary` | Glossary | `text/html` | Glossary description plus all approved entries as an HTML `<dl>`, including each entry's aliases (synonyms) |
 | `ragingestextractor_lesson` | Lesson | `text/html` | Walks the page linked-list in navigation order; includes answer options and feedback. Structural pages (cluster, end-of-branch) are skipped |
 | `ragingestextractor_wiki` | Wiki | `text/html` | Extracts intro + all sub-wiki pages' cached HTML content ordered by title |
-| `ragingestextractor_quiz` | Quiz | `text/html` | Resolves quiz slots through the question bank reference chain; extracts question text, answer options, feedback, and overall feedback bands |
+| `ragingestextractor_quiz` | Quiz | `text/html` | Resolves quiz slots through the question bank reference chain; extracts question text, answer options, feedback, question hints, and overall feedback bands |
 | `ragingestextractor_data` | Database | `text/html` | Extracts intro + all approved records' text-type field values (`text`, `textarea`, `url`, `menu`, etc.) with field labels |
 | `ragingestextractor_feedback` | Feedback | `text/html` | Extracts intro + question/item definitions with multichoice options parsed from the presentation field. User responses are **never** included |
 
@@ -178,7 +180,7 @@ local/ragingest/
 | `ragingestextractor_h5pactivity` | H5P Activity | `text/plain` | Labelled educational text from the H5P content (questions, correct/incorrect answers, cloze, cards, summaries, accordion, nested interactive types), prefixed with the activity name. Works without prior deployment by reading the package directly. |
 | `ragingestextractor_imscp` | IMS Content Package | `text/html` | Parses the manifest structure for page ordering and extracts `<body>` content from all HTML pages in the deployed package |
 | `ragingestextractor_scorm` | SCORM | `text/html` | Extracts intro + SCO titles as table of contents. For locally-stored packages, also reads text from HTML launch pages |
-| `ragingestextractor_videotime` | Video Time | `text/plain` | Extracts and concatenates VTT subtitle/caption track text, stripping timestamps and formatting tags |
+| `ragingestextractor_videotime` | Video Time | `text/plain` | The video description (intro) followed by the concatenated VTT subtitle/caption transcript, stripping timestamps and formatting tags |
 
 > **Note:** H5P placeholders embedded in any rich-text field (e.g., a label or page intro) are automatically resolved by the `h5p_embed_helper` during ingestion, regardless of which extractor produced the HTML.
 

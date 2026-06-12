@@ -55,7 +55,7 @@ class extractor implements content_extractor {
     public function extract(\cm_info $cm): ?array {
         global $DB;
 
-        $activity = $DB->get_record('h5pactivity', ['id' => $cm->instance], 'id, name', MUST_EXIST);
+        $activity = $DB->get_record('h5pactivity', ['id' => $cm->instance], 'id, name, intro', MUST_EXIST);
 
         // Get the .h5p package file from the activity's file area.
         $context = \context_module::instance($cm->id);
@@ -86,14 +86,28 @@ class extractor implements content_extractor {
             return null;
         }
 
-        // Prepend the activity name as a heading so retrieval keeps the title
-        // context (the API payload itself carries no separate title field).
-        $content = $activity->name . "\n\n" . $text;
+        // Lead with the activity description (intro) when present; the activity
+        // name itself is added centrally by the ingestion manager.
+        $intro = self::intro_text($activity->intro ?? '');
+        $content = $intro !== '' ? $intro . "\n\n" . $text : $text;
 
         return [
             'content' => $content,
             'content_type' => 'text/plain',
             'title' => $activity->name,
         ];
+    }
+
+    /**
+     * Reduce an intro HTML field to clean plain text.
+     *
+     * @param string $intro The raw intro HTML.
+     * @return string Plain-text intro (may be empty).
+     */
+    private static function intro_text(string $intro): string {
+        if (trim($intro) === '') {
+            return '';
+        }
+        return trim(html_entity_decode(strip_tags($intro), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
     }
 }

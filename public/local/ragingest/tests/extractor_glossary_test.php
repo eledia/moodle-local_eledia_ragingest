@@ -98,6 +98,47 @@ final class extractor_glossary_test extends \advanced_testcase {
     }
 
     /**
+     * Test that the glossary description (intro) and entry aliases (synonyms)
+     * are included in the extracted content.
+     */
+    public function test_extract_includes_intro_and_aliases(): void {
+        global $DB;
+        $this->resetAfterTest();
+
+        $course = $this->getDataGenerator()->create_course();
+        $glossary = $this->getDataGenerator()->create_module('glossary', [
+            'course' => $course->id,
+            'name' => 'Tech Terms',
+            'intro' => '<p>Key terminology for the course.</p>',
+            'introformat' => FORMAT_HTML,
+        ]);
+
+        $generator = $this->getDataGenerator()->get_plugin_generator('mod_glossary');
+        $entry = $generator->create_content($glossary, [
+            'concept' => 'HTTP',
+            'definition' => 'Hypertext Transfer Protocol',
+        ]);
+
+        // Attach alias synonyms to the entry.
+        foreach (['HyperText Transfer Protocol', 'web protocol'] as $alias) {
+            $DB->insert_record('glossary_alias', (object) ['entryid' => $entry->id, 'alias' => $alias]);
+        }
+
+        $modinfo = get_fast_modinfo($course->id);
+        $cm = $modinfo->get_cm($glossary->cmid);
+
+        $result = (new \ragingestextractor_glossary\extractor())->extract($cm);
+
+        $this->assertNotNull($result);
+        // The course-level description is indexed.
+        $this->assertStringContainsString('Key terminology for the course.', $result['content']);
+        // The concept and both aliases are present for synonym retrieval.
+        $this->assertStringContainsString('<dt>HTTP</dt>', $result['content']);
+        $this->assertStringContainsString('HyperText Transfer Protocol', $result['content']);
+        $this->assertStringContainsString('web protocol', $result['content']);
+    }
+
+    /**
      * Test that extraction returns null for an empty glossary.
      */
     public function test_extract_returns_null_for_empty_glossary(): void {

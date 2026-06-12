@@ -221,6 +221,15 @@ class ingestion_manager {
             ];
         }
 
+        // Prepend the activity name as a heading so every chunk the RAG service
+        // derives is attributable to its activity. No-op for binary content or
+        // when the extractor already supplied its own leading heading/title.
+        $document['content'] = document::with_heading(
+            $document['content'],
+            $document['content_type'],
+            $modulename,
+        );
+
         // Check document size.
         $sizebytes = strlen($document['content']);
         $maxsizemb = (int) (get_config('local_ragingest', 'max_document_size_mb') ?: 20);

@@ -122,6 +122,21 @@ class extractor implements content_extractor {
                 $answersbyq[$a->question][] = $a;
             }
 
+            // Pre-fetch question hints (pedagogical scaffolding shown on retries).
+            $hintsbyq = [];
+            $allhints = $DB->get_records_select(
+                'question_hints',
+                "questionid {$insql}",
+                $inparams,
+                'questionid ASC, id ASC',
+                'id, questionid, hint',
+            );
+            foreach ($allhints as $h) {
+                if (trim((string) $h->hint) !== '') {
+                    $hintsbyq[$h->questionid][] = $h->hint;
+                }
+            }
+
             foreach ($questions as $q) {
                 $html .= '<h3>' . htmlspecialchars($q->questionname, ENT_QUOTES, 'UTF-8') . '</h3>' . "\n";
 
@@ -146,6 +161,14 @@ class extractor implements content_extractor {
                 // General feedback.
                 if (!empty($q->generalfeedback)) {
                     $html .= '<p>' . $q->generalfeedback . '</p>' . "\n";
+                }
+
+                // Question hints.
+                if (!empty($hintsbyq[$q->questionid])) {
+                    $hintlabel = get_string('questionhint', 'local_ragingest');
+                    foreach ($hintsbyq[$q->questionid] as $hint) {
+                        $html .= '<p><em>' . $hintlabel . ' ' . $hint . '</em></p>' . "\n";
+                    }
                 }
             }
         }

@@ -53,7 +53,7 @@ class extractor implements content_extractor {
     public function extract(\cm_info $cm): ?array {
         global $DB;
 
-        $glossary = $DB->get_record('glossary', ['id' => $cm->instance], 'id, name', MUST_EXIST);
+        $glossary = $DB->get_record('glossary', ['id' => $cm->instance], 'id, name, intro', MUST_EXIST);
 
         // Get all approved entries, ordered alphabetically by concept.
         $entries = $DB->get_records('glossary_entries', [
@@ -67,8 +67,34 @@ class extractor implements content_extractor {
 
         $context = \context_module::instance($cm->id);
 
+        // Pre-fetch entry aliases (secondary search terms / synonyms) so they
+        // are indexed alongside the primary concept.
+        [$insql, $inparams] = $DB->get_in_or_equal(array_keys($entries), SQL_PARAMS_NAMED);
+        $aliasrows = $DB->get_records_select('glossary_alias', "entryid {$insql}", $inparams,
+            'id ASC', 'id, entryid, alias');
+        $aliasesbyentry = [];
+        foreach ($aliasrows as $row) {
+            $alias = trim((string) $row->alias);
+            if ($alias !== '') {
+                $aliasesbyentry[$row->entryid][] = $alias;
+            }
+        }
+
         // Build a single HTML document from all entries.
         $html = '<h1>' . htmlspecialchars($glossary->name, ENT_QUOTES, 'UTF-8') . '</h1>' . "\n";
+
+        // Glossary description (intro), when set.
+        if (!empty($glossary->intro)) {
+            $html .= file_rewrite_pluginfile_urls(
+                $glossary->intro,
+                'pluginfile.php',
+                $context->id,
+                'mod_glossary',
+                'intro',
+                0,
+            ) . "\n";
+        }
+
         $html .= '<dl>' . "\n";
 
         foreach ($entries as $entry) {
@@ -83,7 +109,16 @@ class extractor implements content_extractor {
                 $entry->id,
             );
             $html .= '  <dt>' . htmlspecialchars($entry->concept, ENT_QUOTES, 'UTF-8') . '</dt>' . "\n";
-            $html .= '  <dd>' . $definition . '</dd>' . "\n";
+            $html .= '  <dd>' . $definition;
+            if (!empty($aliasesbyentry[$entry->id])) {
+                $aliases = array_map(
+                    static fn($a) => htmlspecialchars($a, ENT_QUOTES, 'UTF-8'),
+                    $aliasesbyentry[$entry->id],
+                );
+                $html .= '<p>' . get_string('alsoknownas', 'local_ragingest') . ' '
+                    . implode(', ', $aliases) . '</p>';
+            }
+            $html .= '</dd>' . "\n";
         }
 
         $html .= '</dl>' . "\n";

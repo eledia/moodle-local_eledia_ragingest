@@ -94,10 +94,11 @@ final class extractor_h5pactivity_test extends \advanced_testcase {
         $result = $extractor->extract($cm);
 
         // The package (an Accordion fixture) is now indexable without deployment.
+        // The activity name is added centrally by the manager, not the extractor,
+        // so the extractor output is the H5P text itself.
         $this->assertNotNull($result);
         $this->assertSame('text/plain', $result['content_type']);
         $this->assertSame('Undeployed H5P', $result['title']);
-        $this->assertStringStartsWith('Undeployed H5P', $result['content']);
         $this->assertStringContainsString('Section:', $result['content']);
     }
 
