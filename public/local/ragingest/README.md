@@ -14,7 +14,7 @@ The plugin uses a **subplugin architecture** (`ragingestextractor`) to support p
 - **Bulk reindex** — admin page to re-ingest all modules in a course at once
 - **Retry logic** — HTTP client retries failed requests up to 3 times with exponential backoff (1 s, 2 s)
 - **Size limit enforcement** — configurable maximum document size; oversized **text** content is truncated (UTF-8 safe) and still sent so large activities are partially indexed rather than dropped, while oversized binary files (PDF) are skipped
-- **Assessment criteria indexed** — advanced grading rubrics and marking guides (core `gradingform`) are extracted for assignments, and database field definitions describe the records' schema
+- **Assessment criteria indexed** — advanced grading rubrics and marking guides (core `gradingform`) are extracted for assignments, the grading-strategy dimensions (accumulative / comments / number-of-errors / rubric) are extracted for workshops, and database field definitions describe the records' schema
 - **Deterministic source IDs** — format `{tenant}:course{id}:cmid{id}` ensures idempotent upserts
 - **Multi-tenant support** — tenant ID is included in every payload and source ID
 - **Activity-name heading** — every document is prefixed centrally with the activity's name (as an `<h1>` for HTML, a title line for plain text) so each chunk the RAG service derives is attributable to its activity; skipped for binary PDFs and when an extractor already supplies its own leading heading

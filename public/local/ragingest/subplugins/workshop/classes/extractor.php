@@ -51,7 +51,7 @@ class extractor implements content_extractor {
         $workshop = $DB->get_record(
             'workshop',
             ['id' => $cm->instance],
-            'id, name, intro, instructauthors, instructreviewers, conclusion',
+            'id, name, intro, instructauthors, instructreviewers, conclusion, strategy',
             MUST_EXIST,
         );
 
@@ -78,6 +78,13 @@ class extractor implements content_extractor {
             }
         }
 
+        // Assessment criteria: the dimensions of the configured grading
+        // strategy describe what reviewers evaluate — valuable guidance.
+        $criteria = self::strategy_criteria($DB, $workshop);
+        if ($criteria !== '') {
+            $parts[] = $criteria;
+        }
+
         if (empty($parts)) {
             return null;
         }
@@ -87,5 +94,77 @@ class extractor implements content_extractor {
             'content_type' => 'text/html',
             'title' => $workshop->name,
         ];
+    }
+
+    /**
+     * Render the dimension descriptions of the workshop's grading strategy.
+     *
+     * All four core strategies (accumulative, comments, numerrors, rubric)
+     * store one row per assessment dimension with a `description` field in a
+     * table named workshopform_{strategy}, keyed by workshopid. The rubric
+     * strategy additionally has level definitions.
+     *
+     * @param \moodle_database $db The database.
+     * @param \stdClass $workshop The workshop record (needs id, strategy).
+     * @return string An HTML fragment (may be empty).
+     */
+    private static function strategy_criteria(\moodle_database $db, \stdClass $workshop): string {
+        $strategy = (string) ($workshop->strategy ?? '');
+        $allowed = ['accumulative', 'comments', 'numerrors', 'rubric'];
+        if (!in_array($strategy, $allowed, true)) {
+            return '';
+        }
+
+        $table = 'workshopform_' . $strategy;
+        if (!$db->get_manager()->table_exists($table)) {
+            return '';
+        }
+
+        $dimensions = $db->get_records($table, ['workshopid' => (int) $workshop->id],
+            'sort ASC', 'id, description');
+        if (empty($dimensions)) {
+            return '';
+        }
+
+        // Rubric level definitions, grouped by dimension.
+        $levelsbydim = [];
+        if ($strategy === 'rubric' && $db->get_manager()->table_exists('workshopform_rubric_levels')) {
+            [$insql, $params] = $db->get_in_or_equal(array_keys($dimensions), SQL_PARAMS_NAMED);
+            $levels = $db->get_records_select('workshopform_rubric_levels',
+                "dimensionid {$insql}", $params, 'dimensionid ASC, grade ASC', 'id, dimensionid, definition');
+            foreach ($levels as $level) {
+                $levelsbydim[$level->dimensionid][] = $level->definition;
+            }
+        }
+
+        $items = '';
+        foreach ($dimensions as $dim) {
+            $desc = trim(html_entity_decode(strip_tags((string) $dim->description),
+                ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            if ($desc === '') {
+                continue;
+            }
+            $items .= '<li>' . htmlspecialchars($desc, ENT_QUOTES, 'UTF-8');
+            if (!empty($levelsbydim[$dim->id])) {
+                $opts = [];
+                foreach ($levelsbydim[$dim->id] as $def) {
+                    $def = trim(html_entity_decode(strip_tags((string) $def), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+                    if ($def !== '') {
+                        $opts[] = htmlspecialchars($def, ENT_QUOTES, 'UTF-8');
+                    }
+                }
+                if (!empty($opts)) {
+                    $items .= '<ul><li>' . implode('</li><li>', $opts) . '</li></ul>';
+                }
+            }
+            $items .= '</li>' . "\n";
+        }
+
+        if ($items === '') {
+            return '';
+        }
+
+        return '<h2>' . get_string('gradingcriteria', 'local_ragingest') . '</h2>' . "\n"
+            . '<ul>' . "\n" . $items . '</ul>' . "\n";
     }
 }
