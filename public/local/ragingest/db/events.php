@@ -93,4 +93,42 @@ $observers = [
         'eventname' => '\mod_wiki\event\page_deleted',
         'callback' => '\local_ragingest\observer::wiki_page_changed',
     ],
+
+    // Sub-content events: database records (approved entries are indexed).
+    [
+        'eventname' => '\mod_data\event\record_created',
+        'callback' => '\local_ragingest\observer::data_record_changed',
+    ],
+    [
+        'eventname' => '\mod_data\event\record_updated',
+        'callback' => '\local_ragingest\observer::data_record_changed',
+    ],
+    [
+        'eventname' => '\mod_data\event\record_deleted',
+        'callback' => '\local_ragingest\observer::data_record_changed',
+    ],
+
+    // Sub-content events: quiz structure (question added/removed/reordered/re-versioned).
+    [
+        'eventname' => '\mod_quiz\event\slot_created',
+        'callback' => '\local_ragingest\observer::quiz_structure_changed',
+    ],
+    [
+        'eventname' => '\mod_quiz\event\slot_deleted',
+        'callback' => '\local_ragingest\observer::quiz_structure_changed',
+    ],
+    [
+        'eventname' => '\mod_quiz\event\slot_moved',
+        'callback' => '\local_ragingest\observer::quiz_structure_changed',
+    ],
+    [
+        'eventname' => '\mod_quiz\event\slot_version_updated',
+        'callback' => '\local_ragingest\observer::quiz_structure_changed',
+    ],
+
+    // Question-bank edits: re-ingest every quiz that references the question.
+    [
+        'eventname' => '\core\event\question_updated',
+        'callback' => '\local_ragingest\observer::question_changed',
+    ],
 ];

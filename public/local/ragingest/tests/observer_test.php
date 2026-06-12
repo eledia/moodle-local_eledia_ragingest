@@ -272,4 +272,105 @@ final class observer_test extends \advanced_testcase {
         $data = json_decode($task->customdata);
         $this->assertEquals($glossary->cmid, $data->cmid);
     }
+
+    /**
+     * Test that creating a database record queues a re-ingest for the activity.
+     */
+    public function test_data_record_created_queues_task(): void {
+        global $DB, $USER;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $data = $this->getDataGenerator()->create_module('data', ['course' => $course->id]);
+
+        $DB->delete_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        // record_created fires in the module context.
+        $recordid = $DB->insert_record('data_records', (object) [
+            'dataid' => $data->id, 'userid' => $USER->id,
+            'timecreated' => time(), 'timemodified' => time(), 'approved' => 1,
+        ]);
+        \mod_data\event\record_created::create([
+            'objectid' => $recordid,
+            'context' => \context_module::instance($data->cmid),
+            'courseid' => $course->id,
+            'other' => ['dataid' => $data->id],
+        ])->trigger();
+
+        $tasks = $DB->get_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+        $this->assertGreaterThanOrEqual(1, count($tasks));
+        $this->assertEquals($data->cmid, json_decode(reset($tasks)->customdata)->cmid);
+    }
+
+    /**
+     * Test that adding a question to a quiz (slot_created) re-ingests the quiz.
+     */
+    public function test_quiz_slot_created_queues_task(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $quiz = $this->getDataGenerator()->create_module('quiz', ['course' => $course->id]);
+
+        $DB->delete_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        \mod_quiz\event\slot_created::create([
+            'objectid' => 1,
+            'context' => \context_module::instance($quiz->cmid),
+            'courseid' => $course->id,
+            'other' => ['quizid' => $quiz->id, 'slotnumber' => 1, 'page' => 1],
+        ])->trigger();
+
+        $tasks = $DB->get_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+        $this->assertGreaterThanOrEqual(1, count($tasks));
+        $this->assertEquals($quiz->cmid, json_decode(reset($tasks)->customdata)->cmid);
+    }
+
+    /**
+     * Test that editing a question re-ingests every quiz that references it.
+     */
+    public function test_question_updated_reingest_referencing_quiz(): void {
+        global $DB;
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $quiz = $this->getDataGenerator()->create_module('quiz', ['course' => $course->id]);
+
+        // Build a question in the quiz's context and add it to the quiz.
+        $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
+        $cat = $qgen->create_question_category([
+            'contextid' => \context_module::instance($quiz->cmid)->id,
+        ]);
+        $question = $qgen->create_question('truefalse', null, ['category' => $cat->id]);
+        quiz_add_quiz_question($question->id, $quiz);
+
+        $DB->delete_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+
+        // Editing the question fires question_updated; the bank entry maps back
+        // to the quiz slot that references it.
+        \core\event\question_updated::create_from_question_instance(
+            \question_bank::load_question_data($question->id),
+            \context_module::instance($quiz->cmid),
+        )->trigger();
+
+        $tasks = $DB->get_records('task_adhoc', [
+            'classname' => '\\local_ragingest\\task\\ingest_module_task',
+        ]);
+        $cmids = array_map(static fn($t) => json_decode($t->customdata)->cmid, $tasks);
+        $this->assertContains((int) $quiz->cmid, array_map('intval', $cmids),
+            'Editing a question should re-ingest the quiz that references it.');
+    }
 }

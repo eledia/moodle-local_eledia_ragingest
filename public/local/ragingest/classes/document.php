@@ -64,4 +64,34 @@ class document {
         // Binary or unknown content type: leave untouched.
         return $content;
     }
+
+    /**
+     * Truncate text content to a byte budget without splitting a multibyte
+     * character, appending a short notice. Binary content (e.g. PDF) cannot be
+     * safely truncated and is returned unchanged for the caller to skip.
+     *
+     * @param string $content The content.
+     * @param string $contenttype The MIME type.
+     * @param int $maxbytes The maximum allowed byte length.
+     * @return array{0: string, 1: bool} The (possibly truncated) content and
+     *         whether truncation was applied.
+     */
+    public static function truncate(string $content, string $contenttype, int $maxbytes): array {
+        if ($maxbytes <= 0 || strlen($content) <= $maxbytes) {
+            return [$content, false];
+        }
+        if ($contenttype !== 'text/plain' && $contenttype !== 'text/html') {
+            // Don't corrupt binary documents — leave for the caller to skip.
+            return [$content, false];
+        }
+
+        $notice = $contenttype === 'text/html'
+            ? "\n<!-- " . get_string('contenttruncated', 'local_ragingest') . ' -->'
+            : "\n\n" . get_string('contenttruncated', 'local_ragingest');
+
+        $budget = max(0, $maxbytes - strlen($notice));
+        $truncated = \core_text::str_max_bytes($content, $budget);
+
+        return [$truncated . $notice, true];
+    }
 }

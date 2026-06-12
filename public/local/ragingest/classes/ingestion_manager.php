@@ -230,22 +230,33 @@ class ingestion_manager {
             $modulename,
         );
 
-        // Check document size.
-        $sizebytes = strlen($document['content']);
+        // Enforce the size limit. Oversized TEXT content is truncated and still
+        // sent (partial indexing beats none); oversized binary content (e.g.
+        // PDF) cannot be safely truncated and is skipped.
         $maxsizemb = (int) (get_config('local_ragingest', 'max_document_size_mb') ?: 20);
         $maxsizebytes = $maxsizemb * 1024 * 1024;
 
-        if ($sizebytes > $maxsizebytes) {
-            $sizemb = round($sizebytes / (1024 * 1024), 2);
-            $sizeinfo = (object) ['size' => $sizemb, 'max' => $maxsizemb];
-            return [
-                'cmid' => $cm->id,
-                'module_name' => $modulename,
-                'success' => false,
-                'status' => 'skipped',
-                'message' => get_string('documentsizeexceeded', 'local_ragingest', $sizeinfo),
-            ];
+        if (strlen($document['content']) > $maxsizebytes) {
+            [$document['content'], $wastruncated] = document::truncate(
+                $document['content'], $document['content_type'], $maxsizebytes);
+
+            if (!$wastruncated) {
+                $sizemb = round(strlen($document['content']) / (1024 * 1024), 2);
+                $sizeinfo = (object) ['size' => $sizemb, 'max' => $maxsizemb];
+                return [
+                    'cmid' => $cm->id,
+                    'module_name' => $modulename,
+                    'success' => false,
+                    'status' => 'skipped',
+                    'message' => get_string('documentsizeexceeded', 'local_ragingest', $sizeinfo),
+                ];
+            }
+
+            mtrace(get_string('contenttruncatedlog', 'local_ragingest',
+                (object) ['cmid' => $cm->id, 'max' => $maxsizemb]));
         }
+
+        $sizebytes = strlen($document['content']);
 
         // Build and send payload.
         $sourceid = source_id_helper::build($cm);

@@ -119,6 +119,74 @@ class observer {
     }
 
     /**
+     * Handle database (mod_data) record created/updated/deleted events.
+     *
+     * Approved records are sub-content of the database activity. When any
+     * record changes, re-ingest the whole activity. The event context is the
+     * database's course module context.
+     *
+     * @param \core\event\base $event The record event.
+     */
+    public static function data_record_changed(\core\event\base $event): void {
+        self::queue_ingestion((int) $event->courseid, (int) $event->contextinstanceid);
+    }
+
+    /**
+     * Handle quiz structure (slot) changes: a question added to, removed from,
+     * reordered in, or re-versioned within a quiz.
+     *
+     * The event context is the quiz's course module context, so the quiz is
+     * re-ingested directly.
+     *
+     * @param \core\event\base $event The slot event.
+     */
+    public static function quiz_structure_changed(\core\event\base $event): void {
+        self::queue_ingestion((int) $event->courseid, (int) $event->contextinstanceid);
+    }
+
+    /**
+     * Handle question-bank edits (a question's text/answers changed).
+     *
+     * A question may be shared by several quizzes, so this reverse-maps the
+     * question's bank entry to every quiz that references it and re-ingests
+     * each. Random-slot (category) references are intentionally not resolved —
+     * the quiz extractor does not ingest random-slot question content.
+     *
+     * @param \core\event\base $event The question event.
+     */
+    public static function question_changed(\core\event\base $event): void {
+        global $DB;
+
+        $questionid = (int) $event->objectid;
+        if ($questionid <= 0) {
+            return;
+        }
+
+        // Resolve the bank entry this question version belongs to.
+        $entryid = $DB->get_field('question_versions', 'questionbankentryid',
+            ['questionid' => $questionid]);
+        if (!$entryid) {
+            return;
+        }
+
+        // Find every quiz course-module that references the entry through a slot.
+        $sql = "SELECT DISTINCT cm.id AS cmid, cm.course AS courseid
+                  FROM {question_references} qr
+                  JOIN {quiz_slots} qs ON qs.id = qr.itemid
+                  JOIN {quiz} q ON q.id = qs.quizid
+                  JOIN {course_modules} cm ON cm.instance = q.id
+                  JOIN {modules} m ON m.id = cm.module AND m.name = 'quiz'
+                 WHERE qr.component = 'mod_quiz'
+                   AND qr.questionarea = 'slot'
+                   AND qr.questionbankentryid = :entryid";
+        $rows = $DB->get_records_sql($sql, ['entryid' => $entryid]);
+
+        foreach ($rows as $row) {
+            self::queue_ingestion((int) $row->courseid, (int) $row->cmid);
+        }
+    }
+
+    /**
      * Queue an ingestion task for a course module.
      *
      * @param int $courseid The course ID.

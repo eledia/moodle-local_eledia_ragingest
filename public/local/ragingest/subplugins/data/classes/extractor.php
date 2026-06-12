@@ -92,8 +92,21 @@ class extractor implements content_extractor {
             "dataid = :dataid AND type {$typesql}",
             array_merge(['dataid' => $data->id], $typeparams),
             'id ASC',
-            'id, name, type',
+            'id, name, type, description',
         );
+
+        // Field definitions (schema): name + description give the records
+        // meaning. Emitted only alongside actual record content (below), so an
+        // empty database is still skipped.
+        $fielddefs = '';
+        foreach ($fields as $field) {
+            $fname = htmlspecialchars((string) $field->name, ENT_QUOTES, 'UTF-8');
+            $fdesc = trim(html_entity_decode(strip_tags((string) ($field->description ?? '')),
+                ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            $fielddefs .= '<li><strong>' . $fname . '</strong>'
+                . ($fdesc !== '' ? ': ' . htmlspecialchars($fdesc, ENT_QUOTES, 'UTF-8') : '')
+                . '</li>' . "\n";
+        }
 
         if (empty($fields)) {
             // No text fields defined — return intro only if present.
@@ -128,6 +141,10 @@ class extractor implements content_extractor {
         );
 
         if (!empty($contents)) {
+            // Lead the records with the field schema for context.
+            if ($fielddefs !== '') {
+                $html .= '<ul>' . "\n" . $fielddefs . '</ul>' . "\n";
+            }
             $currentrecord = null;
             foreach ($contents as $c) {
                 if ($currentrecord !== $c->recordid) {

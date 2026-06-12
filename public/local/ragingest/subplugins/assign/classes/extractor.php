@@ -17,6 +17,7 @@
 namespace ragingestextractor_assign;
 
 use local_ragingest\content_extractor;
+use local_ragingest\grading_criteria;
 
 /**
  * Content extractor for mod_assign activities.
@@ -50,10 +51,6 @@ class extractor implements content_extractor {
 
         $assign = $DB->get_record('assign', ['id' => $cm->instance], 'id, name, intro, activity', MUST_EXIST);
 
-        if (empty($assign->intro) && empty($assign->activity)) {
-            return null;
-        }
-
         $context = \context_module::instance($cm->id);
         $html = '';
 
@@ -78,6 +75,10 @@ class extractor implements content_extractor {
                 0,
             );
         }
+
+        // Advanced grading criteria (rubric / marking guide) when configured —
+        // describes what the submission is assessed on.
+        $html .= grading_criteria::html($context->id, 'mod_assign', 'submissions');
 
         if (empty($html)) {
             return null;

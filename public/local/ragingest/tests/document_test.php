@@ -83,4 +83,49 @@ final class document_test extends \advanced_testcase {
         $this->assertSame('<p>x</p>', document::with_heading('<p>x</p>', 'text/html', '   '));
         $this->assertSame('plain', document::with_heading('plain', 'text/plain', ''));
     }
+
+    /**
+     * Content within budget is returned unchanged.
+     */
+    public function test_truncate_within_budget(): void {
+        [$out, $truncated] = document::truncate('short text', 'text/plain', 1000);
+        $this->assertFalse($truncated);
+        $this->assertSame('short text', $out);
+    }
+
+    /**
+     * Oversized plain text is truncated to the byte budget with a notice.
+     */
+    public function test_truncate_plaintext(): void {
+        $content = str_repeat('a', 5000);
+        [$out, $truncated] = document::truncate($content, 'text/plain', 1000);
+
+        $this->assertTrue($truncated);
+        $this->assertLessThanOrEqual(1000, strlen($out));
+        $this->assertStringContainsString('truncated', $out);
+    }
+
+    /**
+     * UTF-8 multibyte characters are never split by truncation.
+     */
+    public function test_truncate_is_utf8_safe(): void {
+        $content = str_repeat('ü', 2000); // 2 bytes each = 4000 bytes.
+        [$out, $truncated] = document::truncate($content, 'text/plain', 1000);
+
+        $this->assertTrue($truncated);
+        $this->assertLessThanOrEqual(1000, strlen($out));
+        // Valid UTF-8 throughout (no half characters).
+        $this->assertSame($out, mb_convert_encoding($out, 'UTF-8', 'UTF-8'));
+    }
+
+    /**
+     * Binary content (PDF) is never truncated — the caller skips it instead.
+     */
+    public function test_truncate_leaves_binary_untouched(): void {
+        $pdf = str_repeat("\x00\x01", 3000);
+        [$out, $truncated] = document::truncate($pdf, 'application/pdf', 1000);
+
+        $this->assertFalse($truncated);
+        $this->assertSame($pdf, $out);
+    }
 }
