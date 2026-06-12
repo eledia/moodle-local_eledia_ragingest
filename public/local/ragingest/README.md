@@ -10,6 +10,7 @@ The plugin uses a **subplugin architecture** (`ragingestextractor`) to support p
 
 ## Features
 
+- **Opt-in course marking** — only courses you select are ingested. An admin **category allow-list** enables whole categories (and their subcategories); a per-course **"RAG ingestion"** custom field (Default / Include / Exclude, auto-created on install) lets teachers override per course. Un-marking a course **purges** its already-indexed content (a nightly reconcile task also propagates category-list changes). With nothing selected, nothing is ingested.
 - **Automatic ingestion** — event observers react to module create/update/delete plus sub-content edits: book chapters, glossary entries, lesson pages, wiki pages, **database records**, **quiz structure changes** (questions added/removed/reordered), and **question-bank edits** (which re-ingest every quiz that references the edited question)
 - **Bulk reindex** — admin page to re-ingest all modules in a course at once
 - **Retry logic** — HTTP client retries failed requests up to 3 times with exponential backoff (1 s, 2 s)

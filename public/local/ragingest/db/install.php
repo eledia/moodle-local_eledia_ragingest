@@ -15,18 +15,19 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Install-time setup for the RAG ingestion plugin.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2026061300;
-$plugin->requires  = 2024100700;
-$plugin->supported = [405, 501];
-$plugin->component = 'local_ragingest';
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.10.0';
+/**
+ * Create the per-course ingestion-override custom field on install.
+ *
+ * @return bool
+ */
+function xmldb_local_ragingest_install(): bool {
+    \local_ragingest\setup::ensure_course_field();
+    return true;
+}

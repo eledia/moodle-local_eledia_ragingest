@@ -1,0 +1,72 @@
+<?php
+// This file is part of Moodle - http://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
+
+namespace local_ragingest\task;
+
+use local_ragingest\course_state;
+
+/**
+ * Scheduled task: reconcile every course's ingestion state with its marking.
+ *
+ * Catches changes that don't fire a per-course event — most importantly edits
+ * to the category allow-list, which can flip eligibility for many courses at
+ * once — by queueing a per-course reconcile only where state and marking
+ * actually differ.
+ *
+ * @package    local_ragingest
+ * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+class reconcile_all_task extends \core\task\scheduled_task {
+    /**
+     * Task name shown in the scheduled-tasks UI.
+     *
+     * @return string
+     */
+    public function get_name(): string {
+        return get_string('task_reconcile_all', 'local_ragingest');
+    }
+
+    /**
+     * Queue a reconcile for every course whose marking and state diverge.
+     *
+     * @return void
+     */
+    public function execute(): void {
+        global $DB;
+
+        if (!(new \local_ragingest\api_client())->is_configured()) {
+            mtrace('local_ragingest: RAG API not configured — skipping reconcile.');
+            return;
+        }
+
+        $queued = 0;
+        $courses = $DB->get_recordset_select('course', 'id <> :site', ['site' => SITEID], 'id', 'id');
+        foreach ($courses as $course) {
+            $courseid = (int) $course->id;
+            if (\local_ragingest\course_gate::should_ingest($courseid) === course_state::is_ingested($courseid)) {
+                continue;
+            }
+            $task = new reconcile_course_task();
+            $task->set_custom_data(['courseid' => $courseid]);
+            \core\task\manager::queue_adhoc_task($task, true);
+            $queued++;
+        }
+        $courses->close();
+
+        mtrace("local_ragingest: queued {$queued} course reconcile task(s).");
+    }
+}

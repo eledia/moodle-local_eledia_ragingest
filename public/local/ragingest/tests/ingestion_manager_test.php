@@ -36,6 +36,12 @@ final class ingestion_manager_test extends \advanced_testcase {
         set_config('rag_endpoint_url', 'http://localhost:8001/documents/upsert', 'local_ragingest');
         set_config('rag_api_key', 'test-key', 'local_ragingest');
         set_config('max_document_size_mb', '20', 'local_ragingest');
+
+        // Mark the default course category for ingestion so generator courses
+        // (created there) pass the opt-in gate.
+        global $DB;
+        $defaultcat = (int) $DB->get_field_select('course_categories', 'MIN(id)', 'parent = 0');
+        set_config('enabledcategories', (string) $defaultcat, 'local_ragingest');
     }
 
     /**

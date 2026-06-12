@@ -72,6 +72,15 @@ $string['deletionfailed'] = 'Deletion failed: source_id={$a->source_id}, HTTP {$
 $string['taskingestion'] = 'RAG content ingestion';
 $string['taskdeletion'] = 'RAG content deletion';
 
+// Course marking (opt-in ingestion).
+$string['enabledcategories'] = 'Ingested course categories';
+$string['enabledcategories_desc'] = 'Only courses in the selected categories (or their subcategories) are sent to the RAG service. Ingestion is opt-in: with nothing selected, no course is ingested unless individually marked "Include" via the course\'s "RAG ingestion" setting.';
+$string['cfcategory'] = 'AI tutor';
+$string['cffieldname'] = 'RAG ingestion';
+$string['cffielddesc'] = 'Whether this course\'s content is sent to the AI tutor\'s knowledge base. "Default" follows the site\'s category settings; "Include" always sends; "Exclude" never sends.';
+$string['coursenotmarked'] = 'Course is not marked for ingestion.';
+$string['task_reconcile_all'] = 'Reconcile course ingestion marking';
+
 // Extractor content labels.
 $string['alsoknownas'] = 'Also known as:';
 $string['questionhint'] = 'Hint:';

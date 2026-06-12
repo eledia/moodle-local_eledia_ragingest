@@ -48,6 +48,21 @@ if ($hassiteconfig) {
     // derived from $CFG->wwwroot (see \local_ragingest\tenant), matching what
     // the RAG service verifies on the retrieval path.
 
+    // Course marking — category allow-list (opt-in). A course is ingested when
+    // its category (or an ancestor) is selected here, unless overridden on the
+    // course itself via the "RAG ingestion" custom field.
+    $categoryoptions = [];
+    if (during_initial_install() === false) {
+        $categoryoptions = \core_course_category::make_categories_list();
+    }
+    $settings->add(new admin_setting_configmultiselect(
+        'local_ragingest/enabledcategories',
+        get_string('enabledcategories', 'local_ragingest'),
+        get_string('enabledcategories_desc', 'local_ragingest'),
+        [],
+        $categoryoptions
+    ));
+
     // Max document size in MB.
     $settings->add(new admin_setting_configtext(
         'local_ragingest/max_document_size_mb',

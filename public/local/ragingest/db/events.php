@@ -131,4 +131,19 @@ $observers = [
         'eventname' => '\core\event\question_updated',
         'callback' => '\local_ragingest\observer::question_changed',
     ],
+
+    // Course marking changes: reconcile (re-index when enabled, purge when
+    // disabled) and forget state on deletion.
+    [
+        'eventname' => '\core\event\course_created',
+        'callback' => '\local_ragingest\observer::course_changed',
+    ],
+    [
+        'eventname' => '\core\event\course_updated',
+        'callback' => '\local_ragingest\observer::course_changed',
+    ],
+    [
+        'eventname' => '\core\event\course_deleted',
+        'callback' => '\local_ragingest\observer::course_deleted',
+    ],
 ];

@@ -162,6 +162,54 @@ class ingestion_manager {
     }
 
     /**
+     * Remove every document of a course from the RAG index.
+     *
+     * Used when a course is un-marked for ingestion. Each module is removed
+     * with a prefix-scoped delete, so module-level and per-file sub-documents
+     * are all cleared. Idempotent: deleting absent documents is a no-op.
+     *
+     * @param int $courseid The course id.
+     * @return array<int, array> Per-module result rows.
+     */
+    public function purge_course(int $courseid): array {
+        if (!$this->client->is_configured()) {
+            return [[
+                'cmid' => 0,
+                'success' => false,
+                'status' => 'error',
+                'message' => get_string('apinotconfigured', 'local_ragingest'),
+            ]];
+        }
+
+        try {
+            $modinfo = get_fast_modinfo($courseid);
+        } catch (\Exception $e) {
+            return [[
+                'cmid' => 0,
+                'success' => false,
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ]];
+        }
+
+        $results = [];
+        foreach ($modinfo->get_cms() as $cm) {
+            $sourceid = source_id_helper::build($cm);
+            $apiresult = $this->client->delete($sourceid, 'prefix');
+            $results[] = [
+                'cmid' => $cm->id,
+                'success' => (bool) $apiresult['success'],
+                'status' => $apiresult['success'] ? 'success' : 'error',
+                'message' => $sourceid,
+            ];
+            if ($apiresult['success']) {
+                mtrace(get_string('deletionsuccess', 'local_ragingest', $sourceid));
+            }
+        }
+        return $results;
+    }
+
+    /**
      * Ingest content from a cm_info object.
      *
      * @param \cm_info $cm The course module.
@@ -169,6 +217,17 @@ class ingestion_manager {
      */
     private function ingest_module_from_cm(\cm_info $cm): array {
         $modulename = $cm->get_formatted_name();
+
+        // Opt-in gate: only ingest content from courses marked for ingestion.
+        if (!course_gate::should_ingest((int) $cm->course)) {
+            return [
+                'cmid' => $cm->id,
+                'module_name' => $modulename,
+                'success' => false,
+                'status' => 'skipped',
+                'message' => get_string('coursenotmarked', 'local_ragingest'),
+            ];
+        }
 
         // Find a matching extractor.
         $extractor = $this->find_extractor($cm);

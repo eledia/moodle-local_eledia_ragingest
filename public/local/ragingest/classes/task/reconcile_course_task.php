@@ -14,19 +14,30 @@
 // You should have received a copy of the GNU General Public License
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
+namespace local_ragingest\task;
+
+use local_ragingest\course_state;
+
 /**
- * Plugin version and other metadata.
+ * Ad-hoc task: reconcile one course's ingestion state with its marking.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
-
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2026061300;
-$plugin->requires  = 2024100700;
-$plugin->supported = [405, 501];
-$plugin->component = 'local_ragingest';
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.10.0';
+class reconcile_course_task extends \core\task\adhoc_task {
+    /**
+     * Run the reconciliation for the queued course.
+     *
+     * @return void
+     */
+    public function execute(): void {
+        $data = $this->get_custom_data();
+        $courseid = (int) ($data->courseid ?? 0);
+        if ($courseid <= 0) {
+            return;
+        }
+        $action = course_state::reconcile($courseid);
+        mtrace("local_ragingest: reconciled course {$courseid} -> {$action}");
+    }
+}

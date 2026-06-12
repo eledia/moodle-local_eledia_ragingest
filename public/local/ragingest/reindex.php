@@ -54,6 +54,13 @@ if ($courseid && $confirm && confirm_sesskey()) {
     $manager = new \local_ragingest\ingestion_manager();
     $results = $manager->reindex_course($courseid);
 
+    // Record the index state so that later un-marking the course triggers a
+    // purge: a manual reindex of a marked course means it is now indexed.
+    \local_ragingest\course_state::set_ingested(
+        $courseid,
+        \local_ragingest\course_gate::should_ingest($courseid)
+    );
+
     // Display results table.
     $table = new html_table();
     $table->head = [

@@ -187,6 +187,29 @@ class observer {
     }
 
     /**
+     * Handle course created/updated: re-evaluate the course's ingestion marking
+     * and reconcile the index (re-index on enable, purge on disable).
+     *
+     * @param \core\event\base $event The course event.
+     */
+    public static function course_changed(\core\event\base $event): void {
+        $task = new task\reconcile_course_task();
+        $task->set_custom_data(['courseid' => (int) $event->objectid]);
+        \core\task\manager::queue_adhoc_task($task, true);
+    }
+
+    /**
+     * Handle course deleted: forget our per-course state row. The index is
+     * cleared by the per-module course_module_deleted events fired during
+     * course deletion.
+     *
+     * @param \core\event\course_deleted $event The event.
+     */
+    public static function course_deleted(\core\event\course_deleted $event): void {
+        course_state::forget((int) $event->objectid);
+    }
+
+    /**
      * Queue an ingestion task for a course module.
      *
      * @param int $courseid The course ID.

@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Scheduled task definitions for the RAG ingestion plugin.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
@@ -24,9 +24,14 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026061300;
-$plugin->requires  = 2024100700;
-$plugin->supported = [405, 501];
-$plugin->component = 'local_ragingest';
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.10.0';
+$tasks = [
+    [
+        'classname' => 'local_ragingest\task\reconcile_all_task',
+        'blocking' => 0,
+        'minute' => 'R',
+        'hour' => '3',
+        'day' => '*',
+        'month' => '*',
+        'dayofweek' => '*',
+    ],
+];
