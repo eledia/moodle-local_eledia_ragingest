@@ -85,4 +85,38 @@ final class source_id_helper_test extends \advanced_testcase {
         $expected = "eledia:course{$course->id}:cmid{$page->cmid}";
         $this->assertEquals($expected, $sourceid);
     }
+
+    /**
+     * Test that sub-document IDs append a sanitised, separator-free suffix to
+     * the module-level id (so the module id stays a clean prefix).
+     */
+    public function test_build_sub(): void {
+        $this->resetAfterTest();
+        set_config('tenant_id', 'eledia', 'local_ragingest');
+
+        $course = $this->getDataGenerator()->create_course();
+        $page = $this->getDataGenerator()->create_module('page',
+            ['course' => $course->id, 'content' => '<p>x</p>']);
+        $cm = get_fast_modinfo($course->id)->get_cm($page->cmid);
+
+        $base = source_id_helper::build($cm);
+        $sub = source_id_helper::build_sub($cm, 'file3');
+
+        $this->assertSame($base . ':file3', $sub);
+        // The module id is a clean, ':'-bounded prefix of the sub id.
+        $this->assertStringStartsWith($base . ':', $sub);
+    }
+
+    /**
+     * Test suffix sanitisation removes the ':' separator and other unsafe
+     * characters so the prefix boundary can never be broken.
+     */
+    public function test_sanitise_suffix(): void {
+        $this->assertSame('file-3', source_id_helper::sanitise_suffix('file:3'));
+        $this->assertSame('a-b-c', source_id_helper::sanitise_suffix('a/b c'));
+        $this->assertSame('lecture-pdf', source_id_helper::sanitise_suffix('Lecture.pdf'));
+        // Empty / all-unsafe input falls back to a safe token.
+        $this->assertSame('x', source_id_helper::sanitise_suffix(':::'));
+        $this->assertSame('x', source_id_helper::sanitise_suffix(''));
+    }
 }

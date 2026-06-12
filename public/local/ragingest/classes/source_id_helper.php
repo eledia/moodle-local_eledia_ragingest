@@ -48,4 +48,34 @@ class source_id_helper {
         $tenant = get_config('local_ragingest', 'tenant_id') ?: 'default';
         return "{$tenant}:course{$courseid}:cmid{$cmid}";
     }
+
+    /**
+     * Build a sub-document source ID within a module.
+     *
+     * Appends a `:`-separated, sanitised suffix to the module-level id so the
+     * module id remains a clean prefix of all its sub-documents (required for
+     * prefix-scoped deletes). See API_SPECIFICATION.md.
+     *
+     * @param \cm_info $cm The course module info.
+     * @param string $suffix An identifier for the sub-document (e.g. 'file3').
+     * @return string The sub-document source ID.
+     */
+    public static function build_sub(\cm_info $cm, string $suffix): string {
+        return self::build($cm) . ':' . self::sanitise_suffix($suffix);
+    }
+
+    /**
+     * Normalise a sub-document suffix to a safe, separator-free token.
+     *
+     * Lower-cases and replaces anything outside [a-z0-9_-] (notably the `:`
+     * separator) so the suffix can never break the prefix boundary.
+     *
+     * @param string $suffix The raw suffix.
+     * @return string The sanitised suffix (never empty).
+     */
+    public static function sanitise_suffix(string $suffix): string {
+        $clean = preg_replace('/[^a-z0-9_-]+/', '-', \core_text::strtolower(trim($suffix)));
+        $clean = trim((string) $clean, '-');
+        return $clean !== '' ? $clean : 'x';
+    }
 }

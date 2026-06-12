@@ -180,6 +180,49 @@ final class extractor_folder_test extends \advanced_testcase {
     }
 
     /**
+     * Test that extract_documents emits one document per file, each with its
+     * native content type and a distinct suffix, plus the description.
+     */
+    public function test_extract_documents_per_file(): void {
+        $this->resetAfterTest();
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $folder = $this->getDataGenerator()->create_module('folder', [
+            'course' => $course->id,
+            'name' => 'Readings',
+            'intro' => '<p>Weekly readings.</p>',
+            'introformat' => FORMAT_HTML,
+        ]);
+
+        $this->add_file_to_folder($folder, 'lecture1.pdf', '%PDF-1.7 first', 'application/pdf');
+        $this->add_file_to_folder($folder, 'lecture2.pdf', '%PDF-1.7 second', 'application/pdf');
+        $this->add_file_to_folder($folder, 'notes.txt', 'Plain notes.', 'text/plain');
+
+        $modinfo = get_fast_modinfo($course->id);
+        $cm = $modinfo->get_cm($folder->cmid);
+
+        $docs = (new \ragingestextractor_folder\extractor())->extract_documents($cm);
+
+        // Description + three files.
+        $this->assertCount(4, $docs);
+
+        // Suffixes are unique.
+        $suffixes = array_column($docs, 'suffix');
+        $this->assertSame($suffixes, array_unique($suffixes));
+        $this->assertContains('intro', $suffixes);
+
+        // Both PDFs are present with their native content type (not flattened).
+        $pdfs = array_filter($docs, static fn($d) => $d['content_type'] === 'application/pdf');
+        $this->assertCount(2, $pdfs);
+
+        // The plain-text file keeps text/plain.
+        $texts = array_filter($docs, static fn($d) => $d['content_type'] === 'text/plain'
+            && $d['title'] === 'notes.txt');
+        $this->assertCount(1, $texts);
+    }
+
+    /**
      * Helper to add a file to a folder module's content area.
      *
      * @param \stdClass $folder The folder module record.

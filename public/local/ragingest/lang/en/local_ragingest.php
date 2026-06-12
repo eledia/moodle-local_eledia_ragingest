@@ -68,6 +68,7 @@ $string['coursenotfound'] = 'Course not found.';
 $string['deletemodule'] = 'Deleting module from RAG index: cmid {$a}';
 $string['ingestionsuccess'] = 'Ingested: source_id={$a->source_id}, type={$a->content_type}, size={$a->size}';
 $string['ingestionfailed'] = 'Ingestion failed: source_id={$a->source_id}, HTTP {$a->http_code}';
+$string['ingestionmultisummary'] = 'Ingested {$a->sent} document(s), {$a->failed} failed';
 $string['deletionsuccess'] = 'Deleted from index: source_id={$a}';
 $string['deletionfailed'] = 'Deletion failed: source_id={$a->source_id}, HTTP {$a->http_code}';
 $string['taskingestion'] = 'RAG content ingestion';

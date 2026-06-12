@@ -162,6 +162,47 @@ final class ingestion_manager_test extends \advanced_testcase {
     }
 
     /**
+     * Test that a multi-document module (a folder with several files) sends one
+     * upsert per file after a prefix-scoped clear of the previous set.
+     */
+    public function test_ingest_multidocument_folder(): void {
+        global $DB;
+        $this->setAdminUser();
+
+        $course = $this->getDataGenerator()->create_course();
+        $folder = $this->getDataGenerator()->create_module('folder', [
+            'course' => $course->id,
+            'name' => 'Readings',
+        ]);
+        // Force-clear the generator's default intro so the document count is
+        // exactly the two files below.
+        $DB->set_field('folder', 'intro', '', ['id' => $folder->id]);
+
+        $context = \context_module::instance($folder->cmid);
+        $fs = get_file_storage();
+        foreach (['a.txt' => 'First.', 'b.txt' => 'Second.'] as $name => $body) {
+            $fs->create_file_from_string([
+                'contextid' => $context->id, 'component' => 'mod_folder', 'filearea' => 'content',
+                'itemid' => 0, 'filepath' => '/', 'filename' => $name, 'mimetype' => 'text/plain',
+            ], $body);
+        }
+
+        // One prefix-delete + two upserts = three HTTP calls.
+        \curl::mock_response('{"status": "ok"}');
+        \curl::mock_response('{"status": "ok"}');
+        \curl::mock_response('{"status": "ok"}');
+
+        $manager = new ingestion_manager();
+        ob_start();
+        $result = $manager->ingest_module($course->id, $folder->cmid);
+        ob_end_clean();
+
+        $this->assertTrue($result['success']);
+        $this->assertSame('success', $result['status']);
+        $this->assertStringContainsString('2 document', $result['message']);
+    }
+
+    /**
      * Test that the ingestion manager enforces file size limits.
      */
     public function test_reindex_course_enforces_size_limit(): void {

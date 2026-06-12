@@ -1,9 +1,15 @@
 # RAG Ingestion API Specification
 
-> **Version:** 1.0  
-> **Date:** March 2026  
+> **Version:** 1.1  
+> **Date:** June 2026  
 > **Audience:** RAG service developers  
 > **Consumer:** `local_ragingest` Moodle plugin
+>
+> **Changelog 1.0 → 1.1:** `source_id` may now carry an optional `:{suffix}`
+> identifying a sub-document within a module (e.g. one file in a Folder). The
+> delete endpoint gains an optional `scope` field (`"exact"` | `"prefix"`); the
+> plugin removes a whole module with `scope: "prefix"`. Backwards-compatible:
+> omitting `scope` behaves exactly as v1.0 (exact match).
 
 This document describes the HTTP API that the RAG service **must** implement for the Moodle `local_ragingest` plugin to function. The plugin acts as the sole client and calls exactly two endpoints.
 
@@ -105,8 +111,18 @@ The service must be able to parse, chunk, and embed all three.
 
 #### `source_id` Format
 
+A module-level document uses:
+
 ```
 {tenant_id}:course{course_id}:cmid{cmid}
+```
+
+A module may also be split into **several documents** (e.g. one per file in a
+Folder, or one per book chapter). Sub-documents append a `:` and an opaque
+suffix to the module-level id:
+
+```
+{tenant_id}:course{course_id}:cmid{cmid}:{suffix}
 ```
 
 | Component | Example | Description |
@@ -114,8 +130,14 @@ The service must be able to parse, chunk, and embed all three.
 | `tenant_id` | `uni-heidelberg` | Alphanumeric + hyphens/underscores. Falls back to `default`. |
 | `course_id` | `42` | Integer, Moodle course ID |
 | `cmid` | `99` | Integer, Moodle course module ID |
+| `suffix` | `file3`, `chapter2` | Optional. Identifies one sub-document within a module. Opaque to the service. |
 
-Full example: `uni-heidelberg:course42:cmid99`
+Full examples: `uni-heidelberg:course42:cmid99` (module-level),
+`uni-heidelberg:course42:cmid99:file3` (one file inside that module).
+
+> **Prefix rule (important for deletion):** the module-level id is always a
+> **prefix** of all its sub-document ids, with `:` as the separator. The service
+> relies on this for scoped deletes — see [Delete Document](#2-delete-document).
 
 #### Expected Response
 
@@ -164,7 +186,8 @@ POST /documents/delete
 
 ```json
 {
-    "source_id": "my-tenant:course42:cmid99"
+    "source_id": "my-tenant:course42:cmid99",
+    "scope": "prefix"
 }
 ```
 
@@ -172,7 +195,34 @@ POST /documents/delete
 
 | Field | Type | Required | Description |
 |---|---|---|---|
-| `source_id` | string | ✅ | The same `source_id` that was used during upsert. The service must delete all vectors/chunks associated with this ID. |
+| `source_id` | string | ✅ | The `source_id` to delete. The service must delete all vectors/chunks of the matching document(s). |
+| `scope` | string | optional | `"exact"` (default) or `"prefix"`. See below. |
+
+#### Delete `scope` — exact vs. prefix
+
+A module may be ingested as a **single** document (`…:cmid99`) or as **several**
+sub-documents (`…:cmid99:file1`, `…:cmid99:file2`, …). When the module is
+deleted or re-ingested, the plugin must remove **all** of them in one call,
+without knowing how many exist. It therefore sends `scope: "prefix"`:
+
+- **`scope: "exact"`** (or omitted) — delete the single document whose id equals
+  `source_id` exactly. (Backwards-compatible with the original contract.)
+- **`scope: "prefix"`** — delete the document whose id equals `source_id`
+  **and** every sub-document whose id begins with `source_id` followed by a `:`
+  separator. Example: `prefix` delete of `my-tenant:course42:cmid99` removes
+  `…:cmid99`, `…:cmid99:file1` and `…:cmid99:file2`, but must **not** match an
+  unrelated `…:cmid990` (the `:` boundary prevents false prefix hits).
+
+> Implementation hint: store `source_id` as an indexed payload field and match
+> with an anchored prefix on `"{source_id}:"` plus an equality check on
+> `"{source_id}"`. The `tenant_id`/`course_id`/`cmid` already live in
+> `qdrant_metadata`, so a metadata filter on `cmid` is an equally valid way to
+> implement a `prefix`-scoped delete — choose whichever your store indexes best.
+
+The plugin always issues the module-removal delete with `scope: "prefix"`, so
+implementing prefix scope is **required** once sub-documents are in use. A
+service that only supports exact deletes will leak vectors when sub-documents
+are removed.
 
 #### Expected Response
 
@@ -283,7 +333,8 @@ curl -X POST http://localhost:8001/documents/delete \
   -H "Content-Type: application/json" \
   -H "X-API-Key: your-api-key" \
   -d '{
-    "source_id": "default:course2:cmid15"
+    "source_id": "default:course2:cmid15",
+    "scope": "prefix"
   }'
 ```
 
@@ -302,3 +353,5 @@ curl -X POST http://localhost:8001/documents/delete \
 5. **Multi-tenant isolation** — Use `tenant_id` to ensure queries from one Moodle instance cannot retrieve documents from another.
 
 6. **Large documents** — The plugin enforces a configurable size limit (default 20 MB) before sending. The service may impose its own limits and respond with `413`.
+
+7. **Sub-documents & prefix delete (v1.1)** — A module may be ingested as one document or split into several (`…:cmid99:fileN`). The module-level id is always a `:`-separated prefix of its sub-document ids. The plugin removes a whole module with a single `scope: "prefix"` delete, so the service **must** delete the prefix-matching set (the `:` boundary prevents `cmid99` from matching `cmid990`). Equivalently, delete by the `cmid` metadata field. Without this, removing or re-ingesting a multi-file module leaves orphaned vectors.

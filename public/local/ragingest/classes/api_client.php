@@ -74,11 +74,14 @@ class api_client {
      * by replacing /upsert with /delete.
      *
      * @param string $sourceid The source_id of the document to delete.
+     * @param string $scope Deletion scope: 'exact' (default) deletes the single
+     *                      matching document; 'prefix' also deletes every
+     *                      sub-document whose id begins with "{sourceid}:".
      * @return array Result with keys 'success', 'http_code', 'response', 'error'.
      */
-    public function delete(string $sourceid): array {
+    public function delete(string $sourceid, string $scope = 'exact'): array {
         $deleteurl = $this->get_delete_url();
-        return $this->send_request($deleteurl, ['source_id' => $sourceid]);
+        return $this->send_request($deleteurl, ['source_id' => $sourceid, 'scope' => $scope]);
     }
 
     /**

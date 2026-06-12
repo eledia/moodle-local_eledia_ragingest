@@ -137,7 +137,9 @@ class ingestion_manager {
 
         $sourceid = source_id_helper::build_from_ids($courseid, $cmid);
 
-        $apiresult = $this->client->delete($sourceid);
+        // Prefix scope removes the module-level document AND any sub-documents
+        // (e.g. per-file Folder documents) in one call.
+        $apiresult = $this->client->delete($sourceid, 'prefix');
 
         if ($apiresult['success']) {
             mtrace(get_string('deletionsuccess', 'local_ragingest', $sourceid));
@@ -180,7 +182,13 @@ class ingestion_manager {
             ];
         }
 
-        // Extract content.
+        // Multi-document extractors (e.g. a Folder with several files) emit one
+        // document per sub-item; everything else maps to a single document.
+        if ($extractor instanceof multi_document_extractor) {
+            return $this->ingest_multi($cm, $extractor, $modulename);
+        }
+
+        // Extract content (single document).
         try {
             $document = $extractor->extract($cm);
         } catch (\Exception $e) {
@@ -203,9 +211,99 @@ class ingestion_manager {
             ];
         }
 
-        // Post-process HTML content: resolve any embedded H5P placeholders
-        // so that the RAG service receives the actual H5P text instead of
-        // bare editor-inserted placeholder divs.
+        return $this->process_document($cm, $document, source_id_helper::build($cm), $modulename);
+    }
+
+    /**
+     * Ingest a module that produces several documents (one per sub-item).
+     *
+     * The module's previous document set is cleared with a prefix-scoped delete
+     * before the current set is sent, so added/removed/renamed sub-items never
+     * leave orphaned vectors in the index.
+     *
+     * @param \cm_info $cm The course module.
+     * @param multi_document_extractor $extractor The extractor.
+     * @param string $modulename The formatted module name.
+     * @return array Aggregated result array.
+     */
+    private function ingest_multi(\cm_info $cm, multi_document_extractor $extractor, string $modulename): array {
+        try {
+            $documents = $extractor->extract_documents($cm);
+        } catch (\Exception $e) {
+            return [
+                'cmid' => $cm->id,
+                'module_name' => $modulename,
+                'success' => false,
+                'status' => 'error',
+                'message' => $e->getMessage(),
+            ];
+        }
+
+        $documents = array_values(array_filter($documents,
+            static fn($d) => !empty($d['content']) && !empty($d['suffix'])));
+
+        if (empty($documents)) {
+            return [
+                'cmid' => $cm->id,
+                'module_name' => $modulename,
+                'success' => false,
+                'status' => 'skipped',
+                'message' => get_string('nocontent', 'local_ragingest'),
+            ];
+        }
+
+        // Clear the previous document set for this module first.
+        $this->client->delete(source_id_helper::build($cm), 'prefix');
+
+        $sent = 0;
+        $failed = 0;
+        foreach ($documents as $doc) {
+            $sourceid = source_id_helper::build_sub($cm, (string) $doc['suffix']);
+            $res = $this->process_document($cm, $doc, $sourceid, $modulename);
+            if (!empty($res['success'])) {
+                $sent++;
+            } else if (($res['status'] ?? '') === 'error') {
+                $failed++;
+            }
+        }
+
+        if ($sent === 0 && $failed === 0) {
+            return [
+                'cmid' => $cm->id,
+                'module_name' => $modulename,
+                'success' => false,
+                'status' => 'skipped',
+                'message' => get_string('nocontent', 'local_ragingest'),
+            ];
+        }
+
+        $ok = $failed === 0 && $sent > 0;
+        return [
+            'cmid' => $cm->id,
+            'module_name' => $modulename,
+            'success' => $ok,
+            'status' => $ok ? 'success' : 'error',
+            'message' => get_string('ingestionmultisummary', 'local_ragingest',
+                (object) ['sent' => $sent, 'failed' => $failed]),
+        ];
+    }
+
+    /**
+     * Prepare and send one document (single- or sub-document).
+     *
+     * Resolves embedded H5P, validates the content type, prepends the activity
+     * heading, enforces the size limit (truncating text, skipping binary), and
+     * upserts under the given source id.
+     *
+     * @param \cm_info $cm The course module.
+     * @param array $document The document data ('content', 'content_type', 'title').
+     * @param string $sourceid The source id to upsert under.
+     * @param string $modulename The formatted module name (heading).
+     * @return array Per-document result array.
+     */
+    private function process_document(\cm_info $cm, array $document, string $sourceid, string $modulename): array {
+        // Resolve embedded H5P placeholders in HTML so the RAG service receives
+        // the actual H5P text instead of bare placeholder divs.
         if ($document['content_type'] === 'text/html') {
             $document['content'] = h5p_embed_helper::resolve_h5p_placeholders($document['content']);
         }
@@ -258,8 +356,6 @@ class ingestion_manager {
 
         $sizebytes = strlen($document['content']);
 
-        // Build and send payload.
-        $sourceid = source_id_helper::build($cm);
         $payload = $this->build_payload($cm, $document, $sourceid);
         $apiresult = $this->client->upsert($payload);
 
