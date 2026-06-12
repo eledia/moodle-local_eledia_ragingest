@@ -171,6 +171,33 @@ final class course_gate_test extends \advanced_testcase {
     }
 
     /**
+     * The form hook strips the marking field (and its section header) from the
+     * course edit form so it is not settable by ANYONE while locked.
+     */
+    public function test_strip_course_marking_removes_form_elements(): void {
+        global $DB;
+        $this->resetAfterTest();
+        setup::ensure_course_field();
+
+        $categoryid = (int) $DB->get_field('customfield_field', 'categoryid',
+            ['shortname' => course_gate::FIELD]);
+
+        $form = new \MoodleQuickForm('testform', 'post', '');
+        $form->addElement('header', 'category_' . $categoryid, 'AI tutor');
+        $form->addElement('select', 'customfield_' . course_gate::FIELD, 'RAG ingestion',
+            [1 => 'Default', 2 => 'Include', 3 => 'Exclude']);
+        $form->addElement('text', 'fullname', 'Course name');
+        $form->setType('fullname', PARAM_TEXT);
+
+        \local_ragingest\hook_callbacks::strip_course_marking($form);
+
+        $this->assertFalse($form->elementExists('customfield_' . course_gate::FIELD));
+        $this->assertFalse($form->elementExists('category_' . $categoryid));
+        // Unrelated elements are untouched.
+        $this->assertTrue($form->elementExists('fullname'));
+    }
+
+    /**
      * The install/upgrade setup creates the override field, idempotently.
      */
     public function test_ensure_course_field_idempotent(): void {

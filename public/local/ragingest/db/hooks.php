@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Plugin version and other metadata.
+ * Hook callback registrations for the RAG ingestion plugin.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
@@ -24,9 +24,9 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026061303;
-$plugin->requires  = 2024100700;
-$plugin->supported = [405, 501];
-$plugin->component = 'local_ragingest';
-$plugin->maturity  = MATURITY_ALPHA;
-$plugin->release   = '0.11.1';
+$callbacks = [
+    [
+        'hook' => \core_course\hook\after_form_definition::class,
+        'callback' => \local_ragingest\hook_callbacks::class . '::after_course_form_definition',
+    ],
+];
