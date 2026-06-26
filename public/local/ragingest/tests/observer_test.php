@@ -80,7 +80,7 @@ final class observer_test extends \advanced_testcase {
         $event = \core\event\course_module_updated::create([
             'objectid' => $page->cmid,
             'courseid' => $course->id,
-            'context' => \context_module::instance($page->cmid),
+            'context' => \core\context\module::instance($page->cmid),
             'other' => [
                 'modulename' => 'page',
                 'instanceid' => $page->id,
@@ -117,7 +117,7 @@ final class observer_test extends \advanced_testcase {
         $event = \core\event\course_module_deleted::create([
             'objectid' => $page->cmid,
             'courseid' => $course->id,
-            'context' => \context_course::instance($course->id),
+            'context' => \core\context\course::instance($course->id),
             'other' => [
                 'modulename' => 'page',
                 'instanceid' => $page->id,
@@ -163,7 +163,7 @@ final class observer_test extends \advanced_testcase {
         ]);
 
         // Trigger chapter_updated event.
-        $context = \context_module::instance($book->cmid);
+        $context = \core\context\module::instance($book->cmid);
         $bookrecord = $DB->get_record('book', ['id' => $book->id]);
         $event = \mod_book\event\chapter_updated::create_from_chapter($bookrecord, $context, $chapter);
         $event->trigger();
@@ -206,7 +206,7 @@ final class observer_test extends \advanced_testcase {
         ]);
 
         // Trigger chapter_created event.
-        $context = \context_module::instance($book->cmid);
+        $context = \core\context\module::instance($book->cmid);
         $bookrecord = $DB->get_record('book', ['id' => $book->id]);
         $chapter = new \stdClass();
         $chapter->id = 999;
@@ -246,7 +246,7 @@ final class observer_test extends \advanced_testcase {
         ]);
 
         // Trigger entry_updated event.
-        $context = \context_module::instance($glossary->cmid);
+        $context = \core\context\module::instance($glossary->cmid);
         $event = \mod_glossary\event\entry_updated::create([
             'context' => $context,
             'objectid' => 123,
@@ -295,7 +295,7 @@ final class observer_test extends \advanced_testcase {
         ]);
         \mod_data\event\record_created::create([
             'objectid' => $recordid,
-            'context' => \context_module::instance($data->cmid),
+            'context' => \core\context\module::instance($data->cmid),
             'courseid' => $course->id,
             'other' => ['dataid' => $data->id],
         ])->trigger();
@@ -324,7 +324,7 @@ final class observer_test extends \advanced_testcase {
 
         \mod_quiz\event\slot_created::create([
             'objectid' => 1,
-            'context' => \context_module::instance($quiz->cmid),
+            'context' => \core\context\module::instance($quiz->cmid),
             'courseid' => $course->id,
             'other' => ['quizid' => $quiz->id, 'slotnumber' => 1, 'page' => 1],
         ])->trigger();
@@ -350,7 +350,7 @@ final class observer_test extends \advanced_testcase {
         // Build a question in the quiz's context and add it to the quiz.
         $qgen = $this->getDataGenerator()->get_plugin_generator('core_question');
         $cat = $qgen->create_question_category([
-            'contextid' => \context_module::instance($quiz->cmid)->id,
+            'contextid' => \core\context\module::instance($quiz->cmid)->id,
         ]);
         $question = $qgen->create_question('truefalse', null, ['category' => $cat->id]);
         quiz_add_quiz_question($question->id, $quiz);
@@ -363,7 +363,7 @@ final class observer_test extends \advanced_testcase {
         // to the quiz slot that references it.
         \core\event\question_updated::create_from_question_instance(
             \question_bank::load_question_data($question->id),
-            \context_module::instance($quiz->cmid),
+            \core\context\module::instance($quiz->cmid),
         )->trigger();
 
         $tasks = $DB->get_records('task_adhoc', [

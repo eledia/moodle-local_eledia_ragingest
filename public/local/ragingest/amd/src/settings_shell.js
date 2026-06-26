@@ -1,0 +1,119 @@
+// This file is part of Moodle - http://moodle.org/
+
+/**
+ * Wrap the RAG Ingest Moodle admin settings form in the LernHive Plugin Shell.
+ *
+ * @module     local_ragingest/settings_shell
+ * @copyright  2026 Christopher Reimann, eLeDia GmbH
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+define([], function() {
+    const hideDuplicateHeadings = function(form, pluginTitle) {
+        const region = document.getElementById('region-main') || form.parentNode;
+        Array.prototype.slice.call(region.querySelectorAll('h1, h2')).forEach(function(heading) {
+            if (!heading.closest('.lh-plugin-header') && !heading.closest('#adminsettings')) {
+                heading.hidden = true;
+            }
+        });
+        Array.prototype.slice.call(form.querySelectorAll('h1, h2')).forEach(function(heading) {
+            if (heading.textContent.trim() === pluginTitle) {
+                heading.hidden = true;
+            }
+        });
+    };
+
+    const isFormActionRow = function(node) {
+        return Boolean(node.classList && (
+            node.classList.contains('form-buttons') ||
+            node.classList.contains('settingsformbuttons') ||
+            (node.querySelector && node.querySelector('input[type=submit], button[type=submit]'))
+        ));
+    };
+
+    const hasVisibleSettingsContent = function(card) {
+        return Array.prototype.slice.call(card.children).some(function(child) {
+            if (child.hidden) {
+                return false;
+            }
+            const text = child.textContent ? child.textContent.trim() : '';
+            return Boolean(text || child.querySelector('input, select, textarea, button, .form-item, .formsettingheading'));
+        });
+    };
+
+    const groupSections = function(form) {
+        const fieldset = form.querySelector('fieldset');
+        if (!fieldset || fieldset.dataset.rgSectionCards === '1') {
+            return;
+        }
+        fieldset.dataset.rgSectionCards = '1';
+
+        let card = null;
+        Array.prototype.slice.call(fieldset.children).forEach(function(node) {
+            if (node.hidden || (node.textContent && node.textContent.trim() === '' && !node.querySelector('.form-item'))) {
+                return;
+            }
+            if (node.matches && node.matches('h3.main')) {
+                card = null;
+                return;
+            }
+            if (isFormActionRow(node)) {
+                node.classList.add('rg-settings-actions');
+                if (card) {
+                    const items = card.querySelectorAll('.form-item');
+                    if (items.length) {
+                        items[items.length - 1].classList.add('rg-form-item-before-actions');
+                    }
+                    card.appendChild(node);
+                }
+                card = null;
+                return;
+            }
+            if (!card) {
+                card = document.createElement('section');
+                card.className = 'rg-settings-section-card';
+                fieldset.insertBefore(card, node);
+            }
+            card.appendChild(node);
+        });
+
+        Array.prototype.slice.call(fieldset.querySelectorAll('.rg-settings-section-card')).forEach(function(section) {
+            if (!hasVisibleSettingsContent(section)) {
+                section.remove();
+            }
+        });
+    };
+
+    const init = function(config) {
+        const form = document.getElementById('adminsettings');
+        if (!form || form.dataset.rgShellWrapped === '1') {
+            return;
+        }
+        form.dataset.rgShellWrapped = '1';
+        document.body.classList.add('path-local-ragingest', 'rg-admin-settings-shell-page');
+
+        const shell = document.createElement('div');
+        shell.className = 'lh-plugin-shell rg-admin-settings-shell';
+        shell.innerHTML = config.headerHtml;
+
+        const content = document.createElement('div');
+        content.className = 'lh-plugin-content-area rg-admin-settings-content';
+        form.parentNode.insertBefore(shell, form);
+        shell.appendChild(content);
+        if (config.reindexHtml) {
+            const reindex = document.createElement('div');
+            reindex.innerHTML = config.reindexHtml;
+            Array.prototype.slice.call(reindex.children).forEach(function(node) {
+                content.appendChild(node);
+            });
+        }
+        content.appendChild(form);
+
+        hideDuplicateHeadings(form, config.pluginTitle);
+        groupSections(form);
+    };
+
+    return {
+        init: init
+    };
+});

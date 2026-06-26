@@ -57,7 +57,7 @@ class extractor implements content_extractor {
         global $DB;
 
         $lesson = $DB->get_record('lesson', ['id' => $cm->instance], 'id, name, intro', MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
 
         // Get all pages for this lesson.
         $pages = $DB->get_records(

@@ -118,7 +118,7 @@ final class extractor_h5pactivity_test extends \advanced_testcase {
         ]);
 
         // Get the .h5p package file that the generator created.
-        $context = \context_module::instance($h5pactivity->cmid);
+        $context = \core\context\module::instance($h5pactivity->cmid);
         $fs = get_file_storage();
         $files = $fs->get_area_files($context->id, 'mod_h5pactivity', 'package', 0, 'id', false);
         $file = reset($files);
@@ -180,7 +180,7 @@ final class extractor_h5pactivity_test extends \advanced_testcase {
             'name' => 'Empty H5P',
         ]);
 
-        $context = \context_module::instance($h5pactivity->cmid);
+        $context = \core\context\module::instance($h5pactivity->cmid);
         $fs = get_file_storage();
         $files = $fs->get_area_files($context->id, 'mod_h5pactivity', 'package', 0, 'id', false);
         $file = reset($files);

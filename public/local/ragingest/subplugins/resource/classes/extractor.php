@@ -57,7 +57,7 @@ class extractor implements content_extractor {
      * @return array|null Extracted document data, or null if no suitable file found.
      */
     public function extract(\cm_info $cm): ?array {
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
         $fs = get_file_storage();
 
         // Get files in the resource content area (excluding directories).

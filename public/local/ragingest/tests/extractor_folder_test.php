@@ -236,7 +236,7 @@ final class extractor_folder_test extends \advanced_testcase {
         string $content,
         string $mimetype,
     ): void {
-        $context = \context_module::instance($folder->cmid);
+        $context = \core\context\module::instance($folder->cmid);
         $fs = get_file_storage();
 
         $filerecord = [

@@ -60,5 +60,15 @@ function xmldb_local_ragingest_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026061301, 'local', 'ragingest');
     }
 
+    if ($oldversion < 2026061302) {
+        // Code-only release: settings shell/docs and extractor hardening.
+        upgrade_plugin_savepoint(true, 2026061302, 'local', 'ragingest');
+    }
+
+    if ($oldversion < 2026061303) {
+        // Code-only release: privacy metadata and RAG-Ingest UX refinements.
+        upgrade_plugin_savepoint(true, 2026061303, 'local', 'ragingest');
+    }
+
     return true;
 }

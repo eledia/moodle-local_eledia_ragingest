@@ -30,6 +30,9 @@ use local_ragingest\content_extractor;
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 class extractor implements content_extractor {
+    /** @var int Maximum HTML size for regex body extraction. */
+    private const MAX_BODY_REGEX_BYTES = 2097152;
+
     /**
      * Check whether this extractor supports the given module.
      *
@@ -58,7 +61,7 @@ class extractor implements content_extractor {
             'id, name, intro, scormtype',
             MUST_EXIST,
         );
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
 
         $html = '';
 
@@ -160,6 +163,9 @@ class extractor implements content_extractor {
      * @return string The body content.
      */
     private static function extract_body_content(string $html): string {
+        if (strlen($html) > self::MAX_BODY_REGEX_BYTES) {
+            return $html;
+        }
         if (preg_match('/<body[^>]*>(.*?)<\/body>/is', $html, $matches)) {
             return trim($matches[1]);
         }

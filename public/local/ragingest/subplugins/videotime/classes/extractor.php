@@ -68,7 +68,7 @@ class extractor implements content_extractor {
             return null;
         }
 
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
         $fs = get_file_storage();
         $transcriptparts = [];
 

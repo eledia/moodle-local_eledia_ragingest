@@ -59,18 +59,27 @@ class course_state {
      */
     public static function set_ingested(int $courseid, bool $ingested): void {
         global $DB;
-        $existing = $DB->get_record(self::TABLE, ['courseid' => $courseid]);
-        if ($existing) {
-            $existing->ingested = $ingested ? 1 : 0;
-            $existing->timemodified = time();
-            $DB->update_record(self::TABLE, $existing);
+
+        $value = $ingested ? 1 : 0;
+        try {
+            $existing = $DB->get_record(self::TABLE, ['courseid' => $courseid]);
+            if ($existing) {
+                $existing->ingested = $value;
+                $existing->timemodified = time();
+                $DB->update_record(self::TABLE, $existing);
+                return;
+            }
+            $DB->insert_record(self::TABLE, (object) [
+                'courseid' => $courseid,
+                'ingested' => $value,
+                'timemodified' => time(),
+            ]);
             return;
+        } catch (\dml_exception $e) {
+            // A parallel cron worker may have inserted the row after our read.
+            $DB->set_field(self::TABLE, 'ingested', $value, ['courseid' => $courseid]);
+            $DB->set_field(self::TABLE, 'timemodified', time(), ['courseid' => $courseid]);
         }
-        $DB->insert_record(self::TABLE, (object) [
-            'courseid' => $courseid,
-            'ingested' => $ingested ? 1 : 0,
-            'timemodified' => time(),
-        ]);
     }
 
     /**
@@ -91,14 +100,34 @@ class course_state {
         $manager ??= new ingestion_manager();
 
         if ($desired) {
-            $manager->reindex_course($courseid);
-            self::set_ingested($courseid, true);
+            $results = $manager->reindex_course($courseid);
+            if (!self::has_error_result($results)) {
+                self::set_ingested($courseid, true);
+            }
             return 'reindexed';
         }
 
         $manager->purge_course($courseid);
         self::set_ingested($courseid, false);
         return 'purged';
+    }
+
+    /**
+     * Whether a result list contains an ingestion/deletion error.
+     *
+     * Skipped modules are not errors: an empty or unsupported course can still
+     * be considered reconciled, otherwise it would be queued forever.
+     *
+     * @param array<int, array> $results Result rows from ingestion_manager.
+     * @return bool
+     */
+    private static function has_error_result(array $results): bool {
+        foreach ($results as $result) {
+            if (($result['status'] ?? '') === 'error') {
+                return true;
+            }
+        }
+        return false;
     }
 
     /**
@@ -121,6 +150,60 @@ class course_state {
         foreach ($courses as $course) {
             $courseid = (int) $course->id;
             if (course_gate::should_ingest($courseid) === self::is_ingested($courseid)) {
+                continue;
+            }
+            $task = new task\reconcile_course_task();
+            $task->set_custom_data(['courseid' => $courseid]);
+            \core\task\manager::queue_adhoc_task($task, true);
+            $queued++;
+        }
+        $courses->close();
+
+        return $queued;
+    }
+
+    /**
+     * Count courses that are allowed for ingestion but are not recorded as
+     * indexed yet.
+     *
+     * @return int Number of courses waiting for their initial indexing.
+     */
+    public static function pending_ingestion_count(): int {
+        global $DB;
+
+        $pending = 0;
+        $courses = $DB->get_recordset_select('course', 'id <> :site', ['site' => SITEID], 'id', 'id');
+        foreach ($courses as $course) {
+            $courseid = (int) $course->id;
+            if (course_gate::should_ingest($courseid) && !self::is_ingested($courseid)) {
+                $pending++;
+            }
+        }
+        $courses->close();
+
+        return $pending;
+    }
+
+    /**
+     * Queue indexing for every course that is allowed but not indexed yet.
+     *
+     * Unlike {@see queue_divergent_reconciles()}, this intentionally does not
+     * queue purge tasks. It backs the admin action "index released courses now".
+     *
+     * @return int Number of indexing tasks queued.
+     */
+    public static function queue_pending_ingestions(): int {
+        global $DB;
+
+        if (!(new api_client())->is_configured()) {
+            return 0;
+        }
+
+        $queued = 0;
+        $courses = $DB->get_recordset_select('course', 'id <> :site', ['site' => SITEID], 'id', 'id');
+        foreach ($courses as $course) {
+            $courseid = (int) $course->id;
+            if (!course_gate::should_ingest($courseid) || self::is_ingested($courseid)) {
                 continue;
             }
             $task = new task\reconcile_course_task();

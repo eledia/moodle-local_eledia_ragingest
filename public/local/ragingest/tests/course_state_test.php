@@ -56,6 +56,47 @@ final class course_state_test extends \advanced_testcase {
     }
 
     /**
+     * Failed reindex attempts do not mark a course as indexed.
+     */
+    public function test_reconcile_does_not_mark_failed_reindex_as_ingested(): void {
+        $cat = $this->getDataGenerator()->create_category();
+        $course = $this->getDataGenerator()->create_course(['category' => $cat->id]);
+        set_config('enabledcategories', (string) $cat->id, 'local_ragingest');
+
+        $manager = new class([[
+            'cmid' => 17,
+            'success' => false,
+            'status' => 'error',
+            'message' => 'transport failed',
+        ]]) extends ingestion_manager {
+            /** @var array<int, array> */
+            private array $results;
+
+            /**
+             * Constructor.
+             *
+             * @param array<int, array> $results Result rows.
+             */
+            public function __construct(array $results) {
+                $this->results = $results;
+            }
+
+            /**
+             * Return injected reindex results.
+             *
+             * @param int $courseid Course id.
+             * @return array<int, array>
+             */
+            public function reindex_course(int $courseid): array {
+                return $this->results;
+            }
+        };
+
+        $this->assertSame('reindexed', course_state::reconcile((int) $course->id, $manager));
+        $this->assertFalse(course_state::is_ingested((int) $course->id));
+    }
+
+    /**
      * Un-marking an indexed course purges it and clears state.
      */
     public function test_reconcile_disables_and_purges(): void {

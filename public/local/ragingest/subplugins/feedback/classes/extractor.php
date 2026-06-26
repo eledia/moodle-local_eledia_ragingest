@@ -62,7 +62,7 @@ class extractor implements content_extractor {
             'id, name, intro, page_after_submit',
             MUST_EXIST,
         );
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
 
         $html = '';
 
@@ -96,7 +96,8 @@ class extractor implements content_extractor {
                 // Label items are static HTML blocks — output their name directly.
                 if ($item->typ === 'label') {
                     if (!empty($item->presentation)) {
-                        $html .= $item->presentation . "\n";
+                        $html .= format_text((string) $item->presentation, FORMAT_HTML,
+                            ['context' => $context, 'filter' => false, 'noclean' => false]) . "\n";
                     }
                     continue;
                 }

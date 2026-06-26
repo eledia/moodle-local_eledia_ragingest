@@ -69,7 +69,7 @@ class extractor implements content_extractor {
             'id, name, intro, approval',
             MUST_EXIST,
         );
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
 
         $html = '';
 
@@ -156,7 +156,7 @@ class extractor implements content_extractor {
                 $value = $c->content;
 
                 $html .= '<p><strong>' . htmlspecialchars($fieldname, ENT_QUOTES, 'UTF-8') . ':</strong> ';
-                $html .= $value . '</p>' . "\n";
+                $html .= htmlspecialchars((string) $value, ENT_QUOTES, 'UTF-8') . '</p>' . "\n";
             }
         }
 

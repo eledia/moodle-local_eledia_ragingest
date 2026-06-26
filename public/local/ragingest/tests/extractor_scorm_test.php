@@ -139,7 +139,7 @@ final class extractor_scorm_test extends \advanced_testcase {
         ]);
 
         // Create HTML files in the SCORM content area.
-        $context = \context_module::instance($scorm->cmid);
+        $context = \core\context\module::instance($scorm->cmid);
         $fs = get_file_storage();
 
         $fs->create_file_from_string([

@@ -57,7 +57,7 @@ class extractor implements content_extractor {
 
         // Rewrite @@PLUGINFILE@@ tokens to full URLs so that the
         // H5P embed helper can resolve any embedded H5P content.
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
         $content = file_rewrite_pluginfile_urls(
             $label->intro,
             'pluginfile.php',

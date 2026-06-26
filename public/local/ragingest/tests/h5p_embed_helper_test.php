@@ -92,7 +92,7 @@ final class h5p_embed_helper_test extends \advanced_testcase {
         $this->setAdminUser();
 
         // Create an H5P file in the content bank and a deployed h5p record.
-        $context = \context_system::instance();
+        $context = \core\context\system::instance();
         $fs = get_file_storage();
 
         $filerecord = [
@@ -141,6 +141,12 @@ final class h5p_embed_helper_test extends \advanced_testcase {
         // The H5P text should now appear inline.
         $this->assertStringContainsString('What colour is the sky', $result);
         $this->assertStringContainsString('Blue is the correct answer here', $result);
+
+        $course = $this->getDataGenerator()->create_course();
+        $restricted = h5p_embed_helper::resolve_h5p_placeholders($html, (int) $course->id);
+        $this->assertStringContainsString('Introduction text for this module.', $restricted);
+        $this->assertStringNotContainsString('What colour is the sky', $restricted);
+        $this->assertStringNotContainsString('quiz.h5p', $restricted);
     }
 
     /**

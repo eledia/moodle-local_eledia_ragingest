@@ -37,7 +37,12 @@ class reconcile_course_task extends \core\task\adhoc_task {
         if ($courseid <= 0) {
             return;
         }
-        $action = course_state::reconcile($courseid);
-        mtrace("local_ragingest: reconciled course {$courseid} -> {$action}");
+        try {
+            $action = course_state::reconcile($courseid);
+            mtrace("local_ragingest: reconciled course {$courseid} -> {$action}");
+        } catch (\Throwable $e) {
+            mtrace("local_ragingest: reconcile error for course {$courseid}: " . $e->getMessage());
+            throw $e;
+        }
     }
 }

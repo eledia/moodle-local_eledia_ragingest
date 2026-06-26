@@ -141,7 +141,7 @@ class extractor implements content_extractor, multi_document_extractor {
         global $DB;
 
         $folder = $DB->get_record('folder', ['id' => $cm->instance], 'id, name, intro', MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
 
         $introhtml = '';
         if (!empty($folder->intro)) {

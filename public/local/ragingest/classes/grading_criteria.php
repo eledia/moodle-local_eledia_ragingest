@@ -58,7 +58,7 @@ class grading_criteria {
 
         $body = '';
         if (trim((string) $definition->description) !== '') {
-            $body .= '<p>' . self::clean($definition->description) . '</p>' . "\n";
+            $body .= '<p>' . self::esc(self::clean($definition->description)) . '</p>' . "\n";
         }
 
         if ($definition->method === 'rubric') {
@@ -89,7 +89,10 @@ class grading_criteria {
             return '';
         }
 
-        $levels = $DB->get_records('gradingform_rubric_levels', null, 'criterionid ASC, score ASC',
+        $criterionids = array_keys($criteria);
+        [$insql, $params] = $DB->get_in_or_equal($criterionids, SQL_PARAMS_NAMED);
+        $levels = $DB->get_records_select('gradingform_rubric_levels',
+            "criterionid {$insql}", $params, 'criterionid ASC, score ASC',
             'id, criterionid, score, definition');
         $levelsbycriterion = [];
         foreach ($levels as $level) {
@@ -102,13 +105,13 @@ class grading_criteria {
             if ($desc === '') {
                 continue;
             }
-            $html .= '<li>' . $desc;
+            $html .= '<li>' . self::esc($desc);
             if (!empty($levelsbycriterion[$criterion->id])) {
                 $opts = [];
                 foreach ($levelsbycriterion[$criterion->id] as $level) {
                     $leveltext = self::clean($level->definition);
                     if ($leveltext !== '') {
-                        $opts[] = $leveltext . ' (' . self::num($level->score) . ')';
+                        $opts[] = self::esc($leveltext . ' (' . self::num($level->score) . ')');
                     }
                 }
                 if (!empty($opts)) {
@@ -145,7 +148,7 @@ class grading_criteria {
                 self::clean((string) $criterion->descriptionmarkers),
             ], static fn($p) => $p !== '');
             if (!empty($parts)) {
-                $html .= '<li>' . implode(' — ', $parts) . '</li>' . "\n";
+                $html .= '<li>' . self::esc(implode(' — ', $parts)) . '</li>' . "\n";
             }
         }
         $html .= '</ul>' . "\n";
@@ -160,6 +163,16 @@ class grading_criteria {
      */
     private static function clean(string $value): string {
         return trim(html_entity_decode(strip_tags($value), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+    }
+
+    /**
+     * Escape text for the HTML fragments sent to the RAG service.
+     *
+     * @param string $value The plain text value.
+     * @return string HTML-safe text.
+     */
+    private static function esc(string $value): string {
+        return htmlspecialchars($value, ENT_QUOTES, 'UTF-8');
     }
 
     /**

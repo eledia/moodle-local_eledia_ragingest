@@ -32,7 +32,7 @@ final class grading_criteria_test extends \advanced_testcase {
         $this->resetAfterTest();
         $course = $this->getDataGenerator()->create_course();
         $assign = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
-        $context = \context_module::instance($assign->cmid);
+        $context = \core\context\module::instance($assign->cmid);
 
         $this->assertSame('', grading_criteria::html($context->id, 'mod_assign', 'submissions'));
     }
@@ -46,7 +46,7 @@ final class grading_criteria_test extends \advanced_testcase {
 
         $course = $this->getDataGenerator()->create_course();
         $assign = $this->getDataGenerator()->create_module('assign', ['course' => $course->id]);
-        $context = \context_module::instance($assign->cmid);
+        $context = \core\context\module::instance($assign->cmid);
 
         /** @var \gradingform_rubric_generator $rubricgen */
         $rubricgen = $this->getDataGenerator()->get_plugin_generator('gradingform_rubric');
@@ -83,7 +83,7 @@ final class grading_criteria_test extends \advanced_testcase {
             'course' => $course->id,
             'intro' => '<p>Write an essay.</p>',
         ]);
-        $context = \context_module::instance($assign->cmid);
+        $context = \core\context\module::instance($assign->cmid);
 
         /** @var \gradingform_rubric_generator $rubricgen */
         $rubricgen = $this->getDataGenerator()->get_plugin_generator('gradingform_rubric');

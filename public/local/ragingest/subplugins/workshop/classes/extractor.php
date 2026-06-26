@@ -55,7 +55,7 @@ class extractor implements content_extractor {
             MUST_EXIST,
         );
 
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
         $parts = [];
 
         $fields = [

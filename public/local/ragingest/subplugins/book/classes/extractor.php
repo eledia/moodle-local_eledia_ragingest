@@ -65,7 +65,7 @@ class extractor implements content_extractor {
             return null;
         }
 
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
 
         // Build a single HTML document from all chapters.
         $html = '<h1>' . htmlspecialchars($book->name, ENT_QUOTES, 'UTF-8') . '</h1>' . "\n";

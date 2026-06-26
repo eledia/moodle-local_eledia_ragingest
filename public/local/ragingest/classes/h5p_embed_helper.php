@@ -45,21 +45,22 @@ class h5p_embed_helper {
      * are stripped entirely.
      *
      * @param string $html The raw HTML content (e.g., from a label intro).
+     * @param int|null $courseid Course whose content is currently being indexed.
      * @return string The HTML with H5P placeholders replaced or stripped.
      */
-    public static function resolve_h5p_placeholders(string $html): string {
+    public static function resolve_h5p_placeholders(string $html, ?int $courseid = null): string {
         // Match <div class="h5p-placeholder" ...>URL</div>.
         // The URL may be wrapped in whitespace and the div may have extra attributes.
         $pattern = '#<div\b[^>]*class\s*=\s*["\']h5p-placeholder["\'][^>]*>(.*?)</div>#is';
 
-        return preg_replace_callback($pattern, function ($matches) {
+        return preg_replace_callback($pattern, function ($matches) use ($courseid) {
             $url = trim(strip_tags($matches[1]));
 
             if (empty($url)) {
                 return '';
             }
 
-            $blocks = self::extract_blocks_from_url($url);
+            $blocks = self::extract_blocks_from_url($url, $courseid);
 
             if (empty($blocks)) {
                 // Cannot resolve (not an .h5p, file missing, or no content) — strip.
@@ -84,16 +85,17 @@ class h5p_embed_helper {
      * the package zip as a fallback), then extracts labelled blocks.
      *
      * @param string $url The pluginfile URL pointing to the .h5p file.
+     * @param int|null $courseid Course whose content is currently being indexed.
      * @return string[] Extracted text blocks (empty if not resolvable).
      */
-    private static function extract_blocks_from_url(string $url): array {
+    private static function extract_blocks_from_url(string $url, ?int $courseid): array {
         // Only handle local Moodle URLs that end in .h5p.
         if (!preg_match('/\.h5p(\?|$)/i', $url)) {
             return [];
         }
 
         try {
-            $file = self::resolve_stored_file($url);
+            $file = self::resolve_stored_file($url, $courseid);
         } catch (\Exception $e) {
             // Malformed pluginfile URL — unusual enough to be worth a breadcrumb.
             debugging('[h5p_embed_helper] File resolution failed: ' . $e->getMessage(), DEBUG_DEVELOPER);
@@ -119,9 +121,10 @@ class h5p_embed_helper {
      * filename, then looks up the file in Moodle's file storage.
      *
      * @param string $url The pluginfile URL.
+     * @param int|null $courseid Course whose content is currently being indexed.
      * @return \stored_file|null The file, or null if not found.
      */
-    private static function resolve_stored_file(string $url): ?\stored_file {
+    private static function resolve_stored_file(string $url, ?int $courseid): ?\stored_file {
         global $CFG;
 
         // Parse the URL and extract the path after pluginfile.php or draftfile.php.
@@ -150,6 +153,10 @@ class h5p_embed_helper {
         $component = array_shift($parts);
         $filearea = array_shift($parts);
 
+        if (!self::context_allowed($contextid, (string) $component, $courseid)) {
+            return null;
+        }
+
         // The next part could be itemid (numeric) or part of the filepath.
         // For contentbank, the pattern is: contextid/contentbank/public/itemid/filename.
         $itemid = 0;
@@ -164,5 +171,34 @@ class h5p_embed_helper {
         $file = $fs->get_file($contextid, $component, $filearea, $itemid, $filepath, $filename);
 
         return ($file && !$file->is_directory()) ? $file : null;
+    }
+
+    /**
+     * Restrict placeholder resolution to the current course's context tree.
+     *
+     * @param int $contextid Referenced file context id.
+     * @param string $component File component.
+     * @param int|null $courseid Current course id, if known.
+     * @return bool
+     */
+    private static function context_allowed(int $contextid, string $component, ?int $courseid): bool {
+        if ($courseid === null) {
+            return true;
+        }
+        if ($courseid <= 0 || $contextid <= 0) {
+            return false;
+        }
+        if ($component !== 'contentbank' && !str_starts_with($component, 'mod_')) {
+            return false;
+        }
+
+        $coursecontext = \core\context\course::instance($courseid, IGNORE_MISSING);
+        $filecontext = \context::instance_by_id($contextid, IGNORE_MISSING);
+        if (!$coursecontext || !$filecontext) {
+            return false;
+        }
+
+        return $filecontext->id === $coursecontext->id
+            || str_starts_with((string) $filecontext->path, $coursecontext->path . '/');
     }
 }

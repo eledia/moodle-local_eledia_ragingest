@@ -133,8 +133,10 @@ class course_gate {
     /**
      * Resolve the configured pilot-course list to a set of course ids.
      *
-     * Each non-empty line is a course shortname, or a numeric course id when it
-     * matches an existing course. Cached per request, keyed on the raw setting.
+     * Values are stored as comma-separated course ids by the admin
+     * autocomplete setting. Older newline-separated shortname/id values are
+     * still accepted so existing pilot configurations remain effective until
+     * they are saved through the new UI.
      *
      * @return array<int, true>
      */
@@ -151,7 +153,8 @@ class course_gate {
         }
 
         $set = [];
-        foreach (preg_split('/\R/', $raw) ?: [] as $line) {
+        $shortnames = [];
+        foreach (preg_split('/[\s,]+/', $raw) ?: [] as $line) {
             $line = trim($line);
             if ($line === '') {
                 continue;
@@ -162,9 +165,14 @@ class course_gate {
                 continue;
             }
             // Otherwise treat as a (unique) course shortname.
-            $id = $DB->get_field('course', 'id', ['shortname' => $line]);
-            if ($id) {
-                $set[(int) $id] = true;
+            $shortnames[] = $line;
+        }
+
+        if (!empty($shortnames)) {
+            [$insql, $params] = $DB->get_in_or_equal(array_values(array_unique($shortnames)), SQL_PARAMS_NAMED);
+            $rows = $DB->get_records_select('course', "shortname {$insql}", $params, '', 'id, shortname');
+            foreach ($rows as $row) {
+                $set[(int) $row->id] = true;
             }
         }
 
@@ -179,34 +187,42 @@ class course_gate {
      * @return bool
      */
     private static function category_enabled(int $courseid): bool {
+        static $cache = [];
+
+        $raw = (string) get_config('local_ragingest', 'enabledcategories');
+        $cachekey = $raw . ':' . $courseid;
+        if (array_key_exists($cachekey, $cache)) {
+            return $cache[$cachekey];
+        }
+
         $enabled = self::enabled_category_ids();
         if (empty($enabled)) {
             // Opt-in: nothing is eligible by category until categories are chosen.
-            return false;
+            return $cache[$cachekey] = false;
         }
 
         try {
             $course = get_course($courseid);
         } catch (\Throwable $e) {
-            return false;
+            return $cache[$cachekey] = false;
         }
         $catid = (int) $course->category;
         if ($catid <= 0) {
-            return false;
+            return $cache[$cachekey] = false;
         }
 
         $category = \core_course_category::get($catid, IGNORE_MISSING, true);
         if (!$category) {
-            return false;
+            return $cache[$cachekey] = false;
         }
 
         $chain = array_merge([$catid], array_map('intval', $category->get_parents()));
         foreach ($chain as $id) {
             if (isset($enabled[$id])) {
-                return true;
+                return $cache[$cachekey] = true;
             }
         }
-        return false;
+        return $cache[$cachekey] = false;
     }
 
     /**
@@ -215,9 +231,14 @@ class course_gate {
      * @return array<int, true>
      */
     private static function enabled_category_ids(): array {
+        static $cache = [];
+
         $raw = (string) get_config('local_ragingest', 'enabledcategories');
         if (trim($raw) === '') {
             return [];
+        }
+        if (array_key_exists($raw, $cache)) {
+            return $cache[$raw];
         }
         $set = [];
         foreach (explode(',', $raw) as $id) {
@@ -226,6 +247,7 @@ class course_gate {
                 $set[$id] = true;
             }
         }
+        $cache[$raw] = $set;
         return $set;
     }
 }

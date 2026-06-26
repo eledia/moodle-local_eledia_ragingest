@@ -77,7 +77,7 @@ final class extractor_imscp_test extends \advanced_testcase {
             'name' => 'Learning Package',
         ]);
 
-        $context = \context_module::instance($imscp->cmid);
+        $context = \core\context\module::instance($imscp->cmid);
         $revision = $DB->get_field('imscp', 'revision', ['id' => $imscp->id]);
 
         // Set the manifest structure.
@@ -160,7 +160,7 @@ final class extractor_imscp_test extends \advanced_testcase {
 
         // Clear the structure and remove any default files.
         $DB->set_field('imscp', 'structure', '', ['id' => $imscp->id]);
-        $context = \context_module::instance($imscp->cmid);
+        $context = \core\context\module::instance($imscp->cmid);
         $fs = get_file_storage();
         $fs->delete_area_files($context->id, 'mod_imscp', 'content');
 

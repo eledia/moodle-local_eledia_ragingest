@@ -58,7 +58,7 @@ class extractor implements content_extractor {
         $activity = $DB->get_record('h5pactivity', ['id' => $cm->instance], 'id, name, intro', MUST_EXIST);
 
         // Get the .h5p package file from the activity's file area.
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
         $fs = get_file_storage();
         $files = $fs->get_area_files(
             $context->id,

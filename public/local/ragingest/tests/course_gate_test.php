@@ -94,12 +94,17 @@ final class course_gate_test extends \advanced_testcase {
         $byid = $this->getDataGenerator()->create_course();
         $other = $this->getDataGenerator()->create_course(['shortname' => 'NOTPILOT']);
 
-        // One by shortname, one by numeric id.
-        set_config('pilotcourses', "PILOT-101\n{$byid->id}", 'local_ragingest');
+        // New UI stores comma-separated ids.
+        set_config('pilotcourses', "{$pilot->id},{$byid->id}", 'local_ragingest');
 
         $this->assertTrue(course_gate::should_ingest((int) $pilot->id));
         $this->assertTrue(course_gate::should_ingest((int) $byid->id));
         $this->assertFalse(course_gate::should_ingest((int) $other->id));
+
+        // Existing newline-separated shortname/id settings remain supported.
+        set_config('pilotcourses', "PILOT-101\n{$byid->id}", 'local_ragingest');
+        $this->assertTrue(course_gate::should_ingest((int) $pilot->id));
+        $this->assertTrue(course_gate::should_ingest((int) $byid->id));
 
         // A manager-set Exclude override beats the pilot list.
         $this->set_override((int) $pilot->id, course_gate::OVERRIDE_EXCLUDE);
@@ -231,7 +236,7 @@ final class course_gate_test extends \advanced_testcase {
             ];
             $datum->set('intvalue', $options[$option]);
             $datum->set('value', (string) $options[$option]);
-            $datum->set('contextid', \context_course::instance($courseid)->id);
+            $datum->set('contextid', \core\context\course::instance($courseid)->id);
             $datum->save();
             return;
         }

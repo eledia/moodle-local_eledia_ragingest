@@ -54,7 +54,7 @@ class extractor implements content_extractor {
         global $DB;
 
         $quiz = $DB->get_record('quiz', ['id' => $cm->instance], 'id, name, intro', MUST_EXIST);
-        $context = \context_module::instance($cm->id);
+        $context = \core\context\module::instance($cm->id);
 
         $html = '';
 
@@ -141,7 +141,7 @@ class extractor implements content_extractor {
                 $html .= '<h3>' . htmlspecialchars($q->questionname, ENT_QUOTES, 'UTF-8') . '</h3>' . "\n";
 
                 if (!empty($q->questiontext)) {
-                    $html .= $q->questiontext . "\n";
+                    $html .= self::safe_html((string) $q->questiontext, $context) . "\n";
                 }
 
                 // Include answer options.
@@ -149,10 +149,10 @@ class extractor implements content_extractor {
                     $html .= '<ul>' . "\n";
                     foreach ($answersbyq[$q->questionid] as $answer) {
                         if (!empty($answer->answer)) {
-                            $html .= '<li>' . $answer->answer . '</li>' . "\n";
+                            $html .= '<li>' . self::safe_html((string) $answer->answer, $context) . '</li>' . "\n";
                         }
                         if (!empty($answer->feedback)) {
-                            $html .= '<p><em>' . $answer->feedback . '</em></p>' . "\n";
+                            $html .= '<p><em>' . self::plain_text((string) $answer->feedback) . '</em></p>' . "\n";
                         }
                     }
                     $html .= '</ul>' . "\n";
@@ -160,14 +160,15 @@ class extractor implements content_extractor {
 
                 // General feedback.
                 if (!empty($q->generalfeedback)) {
-                    $html .= '<p>' . $q->generalfeedback . '</p>' . "\n";
+                    $html .= '<p>' . self::safe_html((string) $q->generalfeedback, $context) . '</p>' . "\n";
                 }
 
                 // Question hints.
                 if (!empty($hintsbyq[$q->questionid])) {
                     $hintlabel = get_string('questionhint', 'local_ragingest');
                     foreach ($hintsbyq[$q->questionid] as $hint) {
-                        $html .= '<p><em>' . $hintlabel . ' ' . $hint . '</em></p>' . "\n";
+                        $html .= '<p><em>' . htmlspecialchars($hintlabel, ENT_QUOTES, 'UTF-8')
+                            . ' ' . self::plain_text((string) $hint) . '</em></p>' . "\n";
                     }
                 }
             }
@@ -197,5 +198,27 @@ class extractor implements content_extractor {
             'content_type' => 'text/html',
             'title' => $quiz->name,
         ];
+    }
+
+    /**
+     * Clean editor HTML before sending it to the external index.
+     *
+     * @param string $html Stored HTML.
+     * @param \context $context Formatting context.
+     * @return string Clean HTML.
+     */
+    private static function safe_html(string $html, \context $context): string {
+        return format_text($html, FORMAT_HTML, ['context' => $context, 'filter' => false, 'noclean' => false]);
+    }
+
+    /**
+     * Convert an editor field to escaped plain text for inline contexts.
+     *
+     * @param string $html Stored HTML or text.
+     * @return string HTML-safe text.
+     */
+    private static function plain_text(string $html): string {
+        $text = trim(html_entity_decode(strip_tags($html), ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        return htmlspecialchars($text, ENT_QUOTES, 'UTF-8');
     }
 }

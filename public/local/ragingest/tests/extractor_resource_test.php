@@ -144,7 +144,7 @@ final class extractor_resource_test extends \advanced_testcase {
         ]);
 
         // Add a file to the resource's content file area.
-        $context = \context_module::instance($resource->cmid);
+        $context = \core\context\module::instance($resource->cmid);
         $fs = get_file_storage();
 
         // Remove any default files.

@@ -155,34 +155,38 @@ class observer {
      * @param \core\event\base $event The question event.
      */
     public static function question_changed(\core\event\base $event): void {
-        global $DB;
+        try {
+            global $DB;
 
-        $questionid = (int) $event->objectid;
-        if ($questionid <= 0) {
-            return;
-        }
+            $questionid = (int) $event->objectid;
+            if ($questionid <= 0) {
+                return;
+            }
 
-        // Resolve the bank entry this question version belongs to.
-        $entryid = $DB->get_field('question_versions', 'questionbankentryid',
-            ['questionid' => $questionid]);
-        if (!$entryid) {
-            return;
-        }
+            // Resolve the bank entry this question version belongs to.
+            $entryid = $DB->get_field('question_versions', 'questionbankentryid',
+                ['questionid' => $questionid]);
+            if (!$entryid) {
+                return;
+            }
 
-        // Find every quiz course-module that references the entry through a slot.
-        $sql = "SELECT DISTINCT cm.id AS cmid, cm.course AS courseid
-                  FROM {question_references} qr
-                  JOIN {quiz_slots} qs ON qs.id = qr.itemid
-                  JOIN {quiz} q ON q.id = qs.quizid
-                  JOIN {course_modules} cm ON cm.instance = q.id
-                  JOIN {modules} m ON m.id = cm.module AND m.name = 'quiz'
-                 WHERE qr.component = 'mod_quiz'
-                   AND qr.questionarea = 'slot'
-                   AND qr.questionbankentryid = :entryid";
-        $rows = $DB->get_records_sql($sql, ['entryid' => $entryid]);
+            // Find every quiz course-module that references the entry through a slot.
+            $sql = "SELECT DISTINCT cm.id AS cmid, cm.course AS courseid
+                      FROM {question_references} qr
+                      JOIN {quiz_slots} qs ON qs.id = qr.itemid
+                      JOIN {quiz} q ON q.id = qs.quizid
+                      JOIN {course_modules} cm ON cm.instance = q.id
+                      JOIN {modules} m ON m.id = cm.module AND m.name = 'quiz'
+                     WHERE qr.component = 'mod_quiz'
+                       AND qr.questionarea = 'slot'
+                       AND qr.questionbankentryid = :entryid";
+            $rows = $DB->get_records_sql($sql, ['entryid' => $entryid]);
 
-        foreach ($rows as $row) {
-            self::queue_ingestion((int) $row->courseid, (int) $row->cmid);
+            foreach ($rows as $row) {
+                self::queue_ingestion((int) $row->courseid, (int) $row->cmid);
+            }
+        } catch (\Throwable $e) {
+            debugging('[local_ragingest] question_changed observer error: ' . $e->getMessage(), DEBUG_DEVELOPER);
         }
     }
 

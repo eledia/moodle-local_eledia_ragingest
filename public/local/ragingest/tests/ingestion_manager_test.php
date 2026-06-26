@@ -183,7 +183,7 @@ final class ingestion_manager_test extends \advanced_testcase {
         // exactly the two files below.
         $DB->set_field('folder', 'intro', '', ['id' => $folder->id]);
 
-        $context = \context_module::instance($folder->cmid);
+        $context = \core\context\module::instance($folder->cmid);
         $fs = get_file_storage();
         foreach (['a.txt' => 'First.', 'b.txt' => 'Second.'] as $name => $body) {
             $fs->create_file_from_string([
