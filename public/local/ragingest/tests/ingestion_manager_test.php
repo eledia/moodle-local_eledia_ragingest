@@ -31,6 +31,7 @@ final class ingestion_manager_test extends \advanced_testcase {
     public function setUp(): void {
         parent::setUp();
         $this->resetAfterTest();
+        $this->setAdminUser();
 
         // Configure the plugin so the api_client reports configured.
         set_config('rag_endpoint_url', 'http://localhost:8001/documents/upsert', 'local_ragingest');
@@ -72,6 +73,7 @@ final class ingestion_manager_test extends \advanced_testcase {
             'name' => 'Test Page',
             'content' => '<p>Hello World</p>',
         ]);
+        set_config('enabledcategories', (string) $course->category, 'local_ragingest');
 
         // Mock the curl response for the upsert call.
         \curl::mock_response('{"status": "ok"}');
@@ -220,6 +222,7 @@ final class ingestion_manager_test extends \advanced_testcase {
             'name' => 'Big Page',
             'content' => '<p>This content exceeds 1 KB limit</p>' . str_repeat('x', 2000),
         ]);
+        set_config('enabledcategories', (string) $course->category, 'local_ragingest');
 
         $manager = new ingestion_manager();
         $results = $manager->reindex_course($course->id);

@@ -30,8 +30,8 @@ Moodle erkennt das Plugin, installiert DB-Struktur und antwortet anschliessend w
 ### test02 PHPUnit-Suite
 Linked: feat01 / feat02 / feat03 / feat04 / feat05  
 Typ: automatisiert  
-Status: pending  
-Letzter Lauf: offen
+Status: passed  
+Letzter Lauf: 2026-06-27
 
 **Schritte**
 1. Moodle-PHPUnit fuer die lokale Installation initialisieren, falls erforderlich.
@@ -41,6 +41,33 @@ Letzter Lauf: offen
 **Erwartetes Ergebnis**
 
 Alle vorhandenen Unit-Tests laufen gegen die Ziel-Moodle-Version gruen.
+
+**Beobachtetes Ergebnis 2026-06-27**
+
+Die PHPUnit-Umgebung wurde im lokalen Container `elediaai-moodle-1`
+initialisiert:
+
+- `config.php` enthaelt `phpunit_prefix = phpu_`.
+- `config.php` enthaelt `phpunit_dataroot = /var/moodledata_phpunit`.
+- Debian-Locale `en_AU.UTF-8` wurde im Container generiert.
+- Moodle `admin/tool/phpunit/cli/init.php` erzeugte `vendor/`, `phpunit.xml`,
+  PHPUnit-Dataroot und `phpu_`-Tabellen.
+
+Lauf:
+
+```bash
+cd /var/www/html && vendor/bin/phpunit --testsuite local_ragingest_testsuite
+```
+
+Ergebnis:
+
+- 164 Tests
+- 373 Assertions
+- 0 Failures
+- 0 Errors
+- 27 PHPUnit-Deprecations
+- 1 Notice
+- 5 Skipped
 
 ### test03 End-to-End Upsert/Delete
 Linked: task04 / feat01 / feat02 / feat05  
@@ -140,8 +167,8 @@ Letzter Lauf: 2026-06-26
 ### test06 Review-Haertungen und Container-Smoke
 Linked: task07 / feat01 / feat02 / feat04 / feat05  
 Typ: automatisiert / CLI  
-Status: partially passed  
-Letzter Lauf: 2026-06-26
+Status: passed  
+Letzter Lauf: 2026-06-27
 
 **Schritte**
 1. Vollstaendigen PHP-Lint ueber alle `public/local/ragingest/**/*.php` ausfuehren.
@@ -159,8 +186,8 @@ Letzter Lauf: 2026-06-26
   `h5p_embed_helper`, `reconcile_course_task` und geaenderte Extractors: passed.
 - `pending = 0`.
 - `ragingest_health = ok`.
-- PHPUnit konnte nicht laufen, weil die lokale Container-Konfiguration
-  `$CFG->phpunit_dataroot` nicht gesetzt hat.
+- PHPUnit lief nach Initialisierung der lokalen Testumgebung am 2026-06-27
+  erfolgreich: 164 Tests / 373 Assertions, keine Failures oder Errors.
 
 ## Bugs
 
@@ -186,9 +213,8 @@ Opt-in und API-Key/Tenant-Pruefung reduzieren Risiko, ersetzen aber keine fachli
 
 ### risk05 PHPUnit-Umgebung im lokalen Container ist nicht initialisiert
 
-Im Container `elediaai-moodle-1` fehlen `vendor/bin/phpunit`, ein generiertes
-`phpunit.xml`, `$CFG->phpunit_prefix` und `$CFG->phpunit_dataroot`. Bis die
-PHPUnit-Umgebung initialisiert ist, koennen Review-Fixes nur per Lint,
-Smoke-Tests und manuellen Checks validiert werden. Die Initialisierung wuerde
-`vendor/`, PHPUnit-Dataroot und separate `phpu_`-Tabellen in der Datenbank
-anlegen.
+Die PHPUnit-Umgebung ist im laufenden lokalen Container `elediaai-moodle-1`
+initialisiert und lauffaehig. Sie ist jedoch container-lokal: Bei einem
+Image-Rebuild oder neuem Container muessen `phpunit_prefix`, `phpunit_dataroot`,
+Locale, `vendor/`, `phpunit.xml` und die `phpu_`-Tabellen erneut bereitgestellt
+werden.

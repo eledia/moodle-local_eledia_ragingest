@@ -180,9 +180,10 @@ final class course_gate_test extends \advanced_testcase {
      * course edit form so it is not settable by ANYONE while locked.
      */
     public function test_strip_course_marking_removes_form_elements(): void {
-        global $DB;
+        global $CFG, $DB;
         $this->resetAfterTest();
         setup::ensure_course_field();
+        require_once($CFG->libdir . '/formslib.php');
 
         $categoryid = (int) $DB->get_field('customfield_field', 'categoryid',
             ['shortname' => course_gate::FIELD]);

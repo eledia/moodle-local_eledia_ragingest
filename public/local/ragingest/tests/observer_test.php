@@ -326,7 +326,13 @@ final class observer_test extends \advanced_testcase {
             'objectid' => 1,
             'context' => \core\context\module::instance($quiz->cmid),
             'courseid' => $course->id,
-            'other' => ['quizid' => $quiz->id, 'slotnumber' => 1, 'page' => 1],
+            'other' => [
+                'quizid' => $quiz->id,
+                'slotnumber' => 1,
+                'page' => 1,
+                'questionbankentryid' => 1,
+                'version' => null,
+            ],
         ])->trigger();
 
         $tasks = $DB->get_records('task_adhoc', [

@@ -11,9 +11,9 @@ Linked: feat01 / feat05
 Asked-by: KI  
 Status: open  
 Answer: Noch nicht offiziell anheben. Lokal laeuft Moodle 5.2.1 / Branch 502,
-aber ein reproduzierbarer PHPUnit-Lauf gegen Moodle 5.2 sowie ein dokumentierter
-E2E-Smoke muessen zuerst abgeschlossen sein. Wenn diese Checks gruen sind, waere
-die konkrete Aenderung in `version.php`: `supported = [405, 502]`.
+und der PHPUnit-Lauf gegen Moodle 5.2.1 ist gruen. Vor dem offiziellen Anheben
+fehlt noch der vollstaendige Observer/Cron-E2E-Smoke. Wenn dieser Check gruen
+ist, waere die konkrete Aenderung in `version.php`: `supported = [405, 502]`.
 
 Das Plugin ist lokal in Moodle 5.2.1 installiert und der Upgrade-Lauf war erfolgreich. In `version.php` steht `supported = [405, 501]`. Soll `supported` offiziell auf Moodle 5.2 erweitert werden, sobald Tests gruen sind?
 
@@ -102,8 +102,10 @@ Entweder dokumentierter Support fuer Moodle 5.2 oder konkrete Bugs/Tasks, die Su
 
 - Lokale Installation laeuft auf Moodle 5.2.1 / Branch 502.
 - Code nutzt bereits Moodle-5-kompatible Context-Klassen und den Course-Form-Hook.
-- `version.php` bleibt vorerst bei `supported = [405, 501]`, bis PHPUnit und
-  vollstaendige manuelle Checks reproduzierbar gruen sind.
+- PHPUnit-Suite `local_ragingest_testsuite`: 164 Tests / 373 Assertions, keine
+  Failures oder Errors; 27 PHPUnit-Deprecations, 1 Notice, 5 Skips.
+- `version.php` bleibt vorerst bei `supported = [405, 501]`, bis der
+  vollstaendige Observer/Cron-E2E-Smoke reproduzierbar gruen ist.
 
 ### task04 End-to-End-Test gegen RAG-Debug-Server
 Status: in_progress  
@@ -215,7 +217,7 @@ Die kritischen, hohen und umsetzbaren mittleren Befunde aus dem Review vom
 - [x] Regressionstests ergaenzt
 - [x] Vollstaendiger PHP-Lint bestanden
 - [x] Moodle-CLI-Smoke-Test bestanden
-- [ ] PHPUnit-Lauf nach Initialisierung von `phpunit_dataroot`
+- [x] PHPUnit-Lauf nach Initialisierung von `phpunit_dataroot`
 - [ ] PO Sign-off
 
 ## Done
