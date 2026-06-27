@@ -10,15 +10,23 @@ Keine untriagierten Eintraege.
 Linked: feat01 / feat05  
 Asked-by: KI  
 Status: open  
-Answer: offen
+Answer: Noch nicht offiziell anheben. Lokal laeuft Moodle 5.2.1 / Branch 502,
+aber ein reproduzierbarer PHPUnit-Lauf gegen Moodle 5.2 sowie ein dokumentierter
+E2E-Smoke muessen zuerst abgeschlossen sein. Wenn diese Checks gruen sind, waere
+die konkrete Aenderung in `version.php`: `supported = [405, 502]`.
 
 Das Plugin ist lokal in Moodle 5.2.1 installiert und der Upgrade-Lauf war erfolgreich. In `version.php` steht `supported = [405, 501]`. Soll `supported` offiziell auf Moodle 5.2 erweitert werden, sobald Tests gruen sind?
 
 ### q02 RAG-Service-Verifikation fuer lokale Installation
 Linked: feat05 / task02  
 Asked-by: KI  
-Status: open  
-Answer: offen
+Status: answered  
+Answer: Fuer lokale Core-Smoke-Tests kann der aktuell konfigurierte LiteRAG-
+Endpunkt `http://localhost:8080/local/literag/ingest.php/documents/upsert`
+genutzt werden. Healthcheck, Upsert und Prefix-Delete liefen am 2026-06-27
+erfolgreich. Fuer Payload-Inspektion kann alternativ `debug_server.py` auf dem
+Host gestartet und aus Docker ueber `http://host.docker.internal:8001/...`
+angesprochen werden.
 
 Welcher lokale oder Staging-RAG-Service soll fuer End-to-End-Tests genutzt werden, inklusive API-Key und erwarteter Tenant-/Site-Zuordnung?
 
@@ -73,7 +81,7 @@ Das Plugin ist in der lokalen Moodle-Instanz unter `http://localhost:8080/` inst
 - [ ] PO Sign-off
 
 ### task03 Offiziellen Moodle-5.2-Kompatibilitaetscheck vorbereiten
-Status: open  
+Status: in_progress  
 Feature: feat01 / feat04 / feat05  
 Prioritaet: P1  
 Linked: q01
@@ -90,8 +98,15 @@ Klaeren, ob `local_ragingest` offiziell Moodle 5.2 unterstuetzen kann.
 **Erwartetes Ergebnis**  
 Entweder dokumentierter Support fuer Moodle 5.2 oder konkrete Bugs/Tasks, die Support blockieren.
 
+**Zwischenstand 2026-06-27**
+
+- Lokale Installation laeuft auf Moodle 5.2.1 / Branch 502.
+- Code nutzt bereits Moodle-5-kompatible Context-Klassen und den Course-Form-Hook.
+- `version.php` bleibt vorerst bei `supported = [405, 501]`, bis PHPUnit und
+  vollstaendige manuelle Checks reproduzierbar gruen sind.
+
 ### task04 End-to-End-Test gegen RAG-Debug-Server
-Status: open  
+Status: in_progress  
 Feature: feat01 / feat02 / feat05  
 Prioritaet: P1  
 Linked: q02
@@ -108,6 +123,15 @@ Nachweisen, dass Upsert und Delete mit realem HTTP-Request funktionieren.
 
 **Erwartetes Ergebnis**  
 Der Service erhaelt valides Upsert-Payload und Prefix-Delete-Payload.
+
+**Zwischenstand 2026-06-27**
+
+- Gegen den aktuell konfigurierten lokalen LiteRAG-Endpunkt wurde ein direkter
+  Plugin-Smoke mit `ingestion_manager::ingest_module(2, 13)` und
+  `ingestion_manager::delete_module(2, 13)` erfolgreich ausgefuehrt.
+- Damit sind echter HTTP-Upsert und Prefix-Delete durch Plugin-Code nachgewiesen.
+- Offen bleibt der vollstaendige Observer/Cron-Pfad ueber Aktivitaet
+  erstellen/aendern/loeschen.
 
 ### task05 Pilot course und Kategorie-Settings auf Such-Multiselect umstellen
 Status: done  

@@ -45,8 +45,8 @@ Alle vorhandenen Unit-Tests laufen gegen die Ziel-Moodle-Version gruen.
 ### test03 End-to-End Upsert/Delete
 Linked: task04 / feat01 / feat02 / feat05  
 Typ: manuell  
-Status: pending  
-Letzter Lauf: offen
+Status: partially passed  
+Letzter Lauf: 2026-06-27
 
 **Schritte**
 1. RAG-Debug-Server starten.
@@ -59,6 +59,31 @@ Letzter Lauf: offen
 **Erwartetes Ergebnis**
 
 Debug-Server sieht mindestens einen validen Upsert und einen validen Prefix-Delete.
+
+**Beobachtetes Ergebnis 2026-06-27**
+
+Der aktuell konfigurierte lokale LiteRAG-Endpunkt
+`http://localhost:8080/local/literag/ingest.php/documents/upsert` meldete im
+Healthcheck `status=ok`.
+
+Direkter Plugin-Smoke im Container:
+
+```bash
+ingestion_manager::ingest_module(2, 13)
+ingestion_manager::delete_module(2, 13)
+```
+
+Ergebnis:
+
+- Upsert erfolgreich fuer `source_id=localhost:course2:cmid13`,
+  `content_type=text/html`, Groesse `1.1 KB`.
+- Prefix-Delete erfolgreich fuer `source_id=localhost:course2:cmid13`.
+
+Nicht abgedeckt:
+
+- Observer-Ausloesung ueber Aktivitaet erstellen/aendern.
+- Ad-hoc-Task/Cron-Pfad.
+- Modul-Loeschung oder Kurs-Unmarking als Delete-Ausloeser.
 
 ### test04 Course selection autocompletes
 Linked: task05 / feat03  
@@ -161,6 +186,9 @@ Opt-in und API-Key/Tenant-Pruefung reduzieren Risiko, ersetzen aber keine fachli
 
 ### risk05 PHPUnit-Umgebung im lokalen Container ist nicht initialisiert
 
-`vendor/bin/phpunit` ist vorhanden, aber der Lauf bricht ohne
-`$CFG->phpunit_dataroot` ab. Bis die PHPUnit-Umgebung initialisiert ist, koennen
-Review-Fixes nur per Lint, Smoke-Tests und manuellen Checks validiert werden.
+Im Container `elediaai-moodle-1` fehlen `vendor/bin/phpunit`, ein generiertes
+`phpunit.xml`, `$CFG->phpunit_prefix` und `$CFG->phpunit_dataroot`. Bis die
+PHPUnit-Umgebung initialisiert ist, koennen Review-Fixes nur per Lint,
+Smoke-Tests und manuellen Checks validiert werden. Die Initialisierung wuerde
+`vendor/`, PHPUnit-Dataroot und separate `phpu_`-Tabellen in der Datenbank
+anlegen.
