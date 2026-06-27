@@ -120,8 +120,12 @@ class extractor implements content_extractor {
             return '';
         }
 
-        $dimensions = $db->get_records($table, ['workshopid' => (int) $workshop->id],
-            'sort ASC', 'id, description');
+        $dimensions = $db->get_records(
+            $table,
+            ['workshopid' => (int) $workshop->id],
+            'sort ASC',
+            'id, description'
+        );
         if (empty($dimensions)) {
             return '';
         }
@@ -130,8 +134,13 @@ class extractor implements content_extractor {
         $levelsbydim = [];
         if ($strategy === 'rubric' && $db->get_manager()->table_exists('workshopform_rubric_levels')) {
             [$insql, $params] = $db->get_in_or_equal(array_keys($dimensions), SQL_PARAMS_NAMED);
-            $levels = $db->get_records_select('workshopform_rubric_levels',
-                "dimensionid {$insql}", $params, 'dimensionid ASC, grade ASC', 'id, dimensionid, definition');
+            $levels = $db->get_records_select(
+                'workshopform_rubric_levels',
+                "dimensionid {$insql}",
+                $params,
+                'dimensionid ASC, grade ASC',
+                'id, dimensionid, definition'
+            );
             foreach ($levels as $level) {
                 $levelsbydim[$level->dimensionid][] = $level->definition;
             }
@@ -139,8 +148,11 @@ class extractor implements content_extractor {
 
         $items = '';
         foreach ($dimensions as $dim) {
-            $desc = trim(html_entity_decode(strip_tags((string) $dim->description),
-                ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            $desc = trim(html_entity_decode(
+                strip_tags((string) $dim->description),
+                ENT_QUOTES | ENT_HTML5,
+                'UTF-8'
+            ));
             if ($desc === '') {
                 continue;
             }

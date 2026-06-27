@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * DevFlow documentation page.
@@ -74,12 +82,14 @@ $nav .= html_writer::end_tag('nav');
 
 $path = __DIR__ . '/docs/' . $docs[$doc]['file'];
 $markdown = file_exists($path) ? file_get_contents($path) : '';
-$article = html_writer::tag('article',
+$article = html_writer::tag(
+    'article',
     markdown_renderer::render((string) $markdown),
     ['class' => 'rg-docs-content rg-shell-card']
 );
 
-$content .= html_writer::tag('div',
+$content .= html_writer::tag(
+    'div',
     html_writer::tag('div', $nav . $article, ['class' => 'rg-docs-layout']),
     ['class' => 'lh-plugin-content-area']
 );

@@ -80,8 +80,10 @@ final class source_id_helper_test extends \advanced_testcase {
         $this->resetAfterTest();
 
         $course = $this->getDataGenerator()->create_course();
-        $page = $this->getDataGenerator()->create_module('page',
-            ['course' => $course->id, 'content' => '<p>x</p>']);
+        $page = $this->getDataGenerator()->create_module(
+            'page',
+            ['course' => $course->id, 'content' => '<p>x</p>']
+        );
         $cm = get_fast_modinfo($course->id)->get_cm($page->cmid);
 
         $base = source_id_helper::build($cm);

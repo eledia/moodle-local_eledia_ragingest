@@ -101,8 +101,11 @@ class extractor implements content_extractor {
 
         // Lead with the video description (intro) when present, then the
         // transcript. The activity name is added centrally by the manager.
-        $intro = trim(html_entity_decode(strip_tags((string) ($videotime->intro ?? '')),
-            ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+        $intro = trim(html_entity_decode(
+            strip_tags((string) ($videotime->intro ?? '')),
+            ENT_QUOTES | ENT_HTML5,
+            'UTF-8'
+        ));
         $body = implode("\n\n", $transcriptparts);
         $content = $intro !== '' ? $intro . "\n\n" . $body : $body;
 

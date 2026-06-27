@@ -164,8 +164,11 @@ class observer {
             }
 
             // Resolve the bank entry this question version belongs to.
-            $entryid = $DB->get_field('question_versions', 'questionbankentryid',
-                ['questionid' => $questionid]);
+            $entryid = $DB->get_field(
+                'question_versions',
+                'questionbankentryid',
+                ['questionid' => $questionid]
+            );
             if (!$entryid) {
                 return;
             }

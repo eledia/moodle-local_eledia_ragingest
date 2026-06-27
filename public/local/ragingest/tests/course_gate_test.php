@@ -139,10 +139,14 @@ final class course_gate_test extends \advanced_testcase {
 
         // Locked: overrides are ignored — only the central lists decide.
         set_config('lockcoursemarking', 1, 'local_ragingest');
-        $this->assertFalse(course_gate::should_ingest((int) $included->id),
-            'Include override must be inert while marking is locked.');
-        $this->assertTrue(course_gate::should_ingest((int) $excluded->id),
-            'Exclude override must be inert while marking is locked.');
+        $this->assertFalse(
+            course_gate::should_ingest((int) $included->id),
+            'Include override must be inert while marking is locked.'
+        );
+        $this->assertTrue(
+            course_gate::should_ingest((int) $excluded->id),
+            'Exclude override must be inert while marking is locked.'
+        );
     }
 
     /**
@@ -185,13 +189,20 @@ final class course_gate_test extends \advanced_testcase {
         setup::ensure_course_field();
         require_once($CFG->libdir . '/formslib.php');
 
-        $categoryid = (int) $DB->get_field('customfield_field', 'categoryid',
-            ['shortname' => course_gate::FIELD]);
+        $categoryid = (int) $DB->get_field(
+            'customfield_field',
+            'categoryid',
+            ['shortname' => course_gate::FIELD]
+        );
 
         $form = new \MoodleQuickForm('testform', 'post', '');
         $form->addElement('header', 'category_' . $categoryid, 'AI tutor');
-        $form->addElement('select', 'customfield_' . course_gate::FIELD, 'RAG ingestion',
-            [1 => 'Default', 2 => 'Include', 3 => 'Exclude']);
+        $form->addElement(
+            'select',
+            'customfield_' . course_gate::FIELD,
+            'RAG ingestion',
+            [1 => 'Default', 2 => 'Include', 3 => 'Exclude']
+        );
         $form->addElement('text', 'fullname', 'Course name');
         $form->setType('fullname', PARAM_TEXT);
 
@@ -213,8 +224,10 @@ final class course_gate_test extends \advanced_testcase {
         setup::ensure_course_field();
         setup::ensure_course_field();
 
-        $this->assertSame(1,
-            $DB->count_records('customfield_field', ['shortname' => course_gate::FIELD]));
+        $this->assertSame(
+            1,
+            $DB->count_records('customfield_field', ['shortname' => course_gate::FIELD])
+        );
     }
 
     /**

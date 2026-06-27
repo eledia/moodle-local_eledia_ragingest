@@ -49,16 +49,19 @@ if ($hassiteconfig) {
             ? get_string('pendingindexingcount', 'local_ragingest', $pendingcount)
             : get_string('indexingreadybody', 'local_ragingest');
         $reindexurl = new moodle_url('/local/ragingest/reindex.php');
-        $actionhtml = html_writer::link($reindexurl,
+        $actionhtml = html_writer::link(
+            $reindexurl,
             html_writer::tag('i', '', ['class' => 'fa fa-rotate', 'aria-hidden' => 'true']) .
             html_writer::span(get_string('openreindex', 'local_ragingest')),
             ['class' => 'btn btn-secondary rg-secondary-action rg-action-panel__action']
         );
         if ($pendingcount > 0) {
-            $actionhtml = html_writer::tag('form',
+            $actionhtml = html_writer::tag(
+                'form',
                 html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'queuepending', 'value' => '1']) .
                 html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
-                html_writer::tag('button',
+                html_writer::tag(
+                    'button',
                     html_writer::tag('i', '', ['class' => 'fa fa-play', 'aria-hidden' => 'true']) .
                     html_writer::span(get_string('indexreleasedcourses', 'local_ragingest')),
                     ['type' => 'submit', 'class' => 'btn btn-primary rg-primary-action']
@@ -70,13 +73,16 @@ if ($hassiteconfig) {
                 ]
             );
         }
-        $reindexhtml = html_writer::tag('section',
-            html_writer::tag('div',
+        $reindexhtml = html_writer::tag(
+            'section',
+            html_writer::tag(
+                'div',
                 html_writer::span(
                     html_writer::tag('i', '', ['class' => 'fa ' . $panelicon, 'aria-hidden' => 'true']),
                     'rg-action-panel__icon'
                 ) .
-                html_writer::tag('div',
+                html_writer::tag(
+                    'div',
                     html_writer::tag('h3', $paneltitle, ['class' => 'rg-action-panel__title']) .
                     html_writer::tag('p', $panelbody, ['class' => 'rg-action-panel__body']),
                     ['class' => 'rg-action-panel__text']
@@ -117,7 +123,7 @@ if ($hassiteconfig) {
         get_string('head_connection_desc', 'local_ragingest')
     ));
 
-    $queuecallback = static function(): void {
+    $queuecallback = static function (): void {
         \local_ragingest\course_state::queue_divergent_reconciles();
     };
 
@@ -193,8 +199,13 @@ if ($hassiteconfig) {
     if (during_initial_install() === false) {
         global $DB;
 
-        $courses = $DB->get_records_select('course', 'id <> :siteid', ['siteid' => SITEID], 'fullname ASC',
-            'id, fullname, shortname');
+        $courses = $DB->get_records_select(
+            'course',
+            'id <> :siteid',
+            ['siteid' => SITEID],
+            'fullname ASC',
+            'id, fullname, shortname'
+        );
         foreach ($courses as $course) {
             $courseoptions[(string) $course->id] = format_string($course->fullname)
                 . ' (' . s($course->shortname) . ')';

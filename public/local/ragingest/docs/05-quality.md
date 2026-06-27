@@ -189,6 +189,70 @@ Letzter Lauf: 2026-06-27
 - PHPUnit lief nach Initialisierung der lokalen Testumgebung am 2026-06-27
   erfolgreich: 164 Tests / 373 Assertions, keine Failures oder Errors.
 
+### test07 Moodle Coding Style und Frontend-Prechecks
+Linked: task07
+Typ: automatisiert / CLI
+Status: passed / not applicable
+Letzter Lauf: 2026-06-27
+
+**Schritte**
+
+1. `moodlehq/moodle-cs` gegen `public/local/ragingest` ausfuehren.
+2. `moodle-extra` als zusaetzlichen Best-Practice-Check ausfuehren.
+3. Im lokalen Moodle-Container Node 22 bereitstellen und `npm ci` im Moodle-Root
+   ausfuehren.
+4. Plugin-Stand nach `elediaai-moodle-1:/var/www/html/public/local/ragingest`
+   synchronisieren.
+5. Im Plugin-Verzeichnis `npx grunt amd --no-color` ausfuehren.
+6. Im Plugin-Verzeichnis `npx grunt rawcss --no-color` ausfuehren.
+7. Mustache- und Third-Party-Library-Status pruefen.
+
+**Beobachtetes Ergebnis**
+
+- `phpcs --standard=moodle -s -p`: passed, 111 PHP-Dateien.
+- `phpcs --standard=moodle-extra -s -p`: passed, 111 PHP-Dateien.
+- `npx grunt amd --no-color`: passed (`ignorefiles`, `eslint:amd`, `rollup`).
+- `npx grunt rawcss --no-color`: passed, 1 CSS-Datei ohne Fehler.
+- `amd/build/settings_shell.min.js` wurde durch Rollup neu erzeugt und in den
+  Plugin-Checkout uebernommen.
+- Mustache: not applicable, keine `.mustache`-Dateien im Plugin.
+- Third-party libraries: not applicable, keine `thirdpartylibs.xml`, kein
+  `vendor/` und kein `node_modules/` im Plugin.
+
+**Hinweis**
+
+PHPUnit ist in Moodle CLI-basiert. Browser-basierte Regressionstests waeren ein
+separater Behat/Selenium-Track, nicht PHPUnit.
+
+### test08 Submission-Release-Precheck 0.12.0
+Linked: task07
+Typ: automatisiert / CLI
+Status: passed
+Letzter Lauf: 2026-06-27
+
+**Schritte**
+
+1. Plugin-Version auf `2026062700` / Release `0.12.0` / `MATURITY_BETA` setzen.
+2. Upgrade-Savepoint `2026062700` pruefen.
+3. PHP-Lint ueber alle Plugin-Dateien ausfuehren.
+4. `phpcs --standard=moodle-extra` ausfuehren.
+5. AMD/CSS-Grunt-Checks im lokalen Moodle-Container ausfuehren.
+6. PHPUnit-Umgebung nach Versionsbump neu initialisieren.
+7. PHPUnit-Suite `local_ragingest_testsuite` ausfuehren.
+
+**Beobachtetes Ergebnis**
+
+- Version und letzter Upgrade-Savepoint: `2026062700`.
+- PHP-Lint: passed.
+- `phpcs --standard=moodle-extra`: passed, 111 PHP-Dateien.
+- `npx grunt amd --no-color`: passed.
+- `npx grunt rawcss --no-color`: passed.
+- PHPUnit: 164 Tests / 373 Assertions / 0 Failures / 0 Errors / 5 Skipped.
+- Bekannte Resthinweise: 27 PHPUnit-Deprecations, 1 Notice.
+- Bei `phpunit-init` meldete ein anderes lokales Plugin
+  `local_customerportal/storage_quota_gb` einen Default-Setting-Debug-Hinweis;
+  `local_ragingest` und seine Extractor-Subplugins wurden erfolgreich installiert.
+
 ## Bugs
 
 Keine bestaetigten Bugs im DevFlow erfasst.

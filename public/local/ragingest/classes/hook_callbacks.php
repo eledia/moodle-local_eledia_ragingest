@@ -57,8 +57,11 @@ class hook_callbacks {
 
         // Our custom-field category holds only this field; drop its header too
         // so no empty section remains.
-        $categoryid = $DB->get_field('customfield_field', 'categoryid',
-            ['shortname' => course_gate::FIELD]);
+        $categoryid = $DB->get_field(
+            'customfield_field',
+            'categoryid',
+            ['shortname' => course_gate::FIELD]
+        );
         if ($categoryid && $mform->elementExists('category_' . $categoryid)) {
             $mform->removeElement('category_' . $categoryid);
         }

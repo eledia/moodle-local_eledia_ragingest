@@ -5,6 +5,14 @@
 // it under the terms of the GNU General Public License as published by
 // the Free Software Foundation, either version 3 of the License, or
 // (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
  * LernHive Plugin Shell adapter for RAG Ingest pages.
@@ -86,8 +94,10 @@ final class shell {
      * @return string Raw HTML for the Plugin Shell section navigation slot.
      */
     public static function sectionnav(string $active): string {
-        if (class_exists('\block_elediaaitutor\output\shell')
-                && method_exists('\block_elediaaitutor\output\shell', 'sectionnav')) {
+        if (
+            class_exists('\block_elediaaitutor\output\shell')
+                && method_exists('\block_elediaaitutor\output\shell', 'sectionnav')
+        ) {
             return \block_elediaaitutor\output\shell::sectionnav('ragingest');
         }
 
@@ -118,7 +128,8 @@ final class shell {
             if ($active === $key) {
                 $attrs['aria-current'] = 'page';
             }
-            $links .= html_writer::tag('a',
+            $links .= html_writer::tag(
+                'a',
                 html_writer::tag('i', '', ['class' => 'fa ' . $item['icon'], 'aria-hidden' => 'true']) .
                 ' ' . s($item['label']),
                 $attrs

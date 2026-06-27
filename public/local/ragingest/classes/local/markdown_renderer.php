@@ -56,7 +56,7 @@ final class markdown_renderer {
         };
 
         foreach (preg_split('/\R/', $markdown) ?: [] as $line) {
-            if (preg_match('/^```/', $line)) {
+            if (preg_match('/^\x60\x60\x60/', $line)) {
                 $closeparagraph();
                 $closelist();
                 if ($incode) {
@@ -117,10 +117,11 @@ final class markdown_renderer {
      * @return string HTML.
      */
     private static function inline(string $text): string {
-        $parts = preg_split('/(`[^`]+`|\*\*[^*]+\*\*)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
+        $backtick = chr(96);
+        $parts = preg_split('/(\x60[^\x60]+\x60|\*\*[^*]+\*\*)/', $text, -1, PREG_SPLIT_DELIM_CAPTURE);
         $html = '';
         foreach ($parts ?: [] as $part) {
-            if (str_starts_with($part, '`') && str_ends_with($part, '`')) {
+            if (str_starts_with($part, $backtick) && str_ends_with($part, $backtick)) {
                 $html .= html_writer::tag('code', s(substr($part, 1, -1)));
             } else if (str_starts_with($part, '**') && str_ends_with($part, '**')) {
                 $html .= html_writer::tag('strong', s(substr($part, 2, -2)));

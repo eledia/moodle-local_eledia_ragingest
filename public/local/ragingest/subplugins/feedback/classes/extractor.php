@@ -96,8 +96,11 @@ class extractor implements content_extractor {
                 // Label items are static HTML blocks — output their name directly.
                 if ($item->typ === 'label') {
                     if (!empty($item->presentation)) {
-                        $html .= format_text((string) $item->presentation, FORMAT_HTML,
-                            ['context' => $context, 'filter' => false, 'noclean' => false]) . "\n";
+                        $html .= format_text(
+                            (string) $item->presentation,
+                            FORMAT_HTML,
+                            ['context' => $context, 'filter' => false, 'noclean' => false]
+                        ) . "\n";
                     }
                     continue;
                 }

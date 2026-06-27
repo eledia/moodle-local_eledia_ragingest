@@ -101,8 +101,11 @@ class extractor implements content_extractor {
         $fielddefs = '';
         foreach ($fields as $field) {
             $fname = htmlspecialchars((string) $field->name, ENT_QUOTES, 'UTF-8');
-            $fdesc = trim(html_entity_decode(strip_tags((string) ($field->description ?? '')),
-                ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+            $fdesc = trim(html_entity_decode(
+                strip_tags((string) ($field->description ?? '')),
+                ENT_QUOTES | ENT_HTML5,
+                'UTF-8'
+            ));
             $fielddefs .= '<li><strong>' . $fname . '</strong>'
                 . ($fdesc !== '' ? ': ' . htmlspecialchars($fdesc, ENT_QUOTES, 'UTF-8') : '')
                 . '</li>' . "\n";

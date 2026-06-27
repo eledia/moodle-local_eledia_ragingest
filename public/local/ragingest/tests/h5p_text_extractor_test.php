@@ -331,9 +331,13 @@ final class h5p_text_extractor_test extends \advanced_testcase {
         $result = h5p_text_extractor::extract_text_from_json($json);
 
         $this->assertStringContainsString(
-            'Correct statement: Photosynthesis converts light into chemical energy.', $result);
+            'Correct statement: Photosynthesis converts light into chemical energy.',
+            $result
+        );
         $this->assertStringContainsString(
-            'Statement: Photosynthesis produces only carbon dioxide.', $result);
+            'Statement: Photosynthesis produces only carbon dioxide.',
+            $result
+        );
     }
 
     /**

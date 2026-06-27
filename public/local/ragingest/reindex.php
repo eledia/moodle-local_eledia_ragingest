@@ -76,7 +76,7 @@ if ($queuepending && confirm_sesskey()) {
     $manager = new \local_ragingest\ingestion_manager();
     $results = $manager->reindex_course($courseid);
 
-    $haserror = array_reduce($results, static function(bool $carry, array $result): bool {
+    $haserror = array_reduce($results, static function (bool $carry, array $result): bool {
         return $carry || (($result['status'] ?? '') === 'error');
     }, false);
     if (!$haserror) {
@@ -163,7 +163,8 @@ if ($queuepending && confirm_sesskey()) {
     echo $OUTPUT->single_button($pageurl, get_string('cancel'), 'get');
 } else {
     // Show course selection form.
-    echo html_writer::tag('div',
+    echo html_writer::tag(
+        'div',
         html_writer::tag('h2', get_string('reindex', 'local_ragingest'), ['class' => 'rg-page-title']) .
         html_writer::tag('p', get_string('reindexintro', 'local_ragingest'), ['class' => 'rg-page-intro']),
         ['class' => 'rg-page-head']
@@ -175,25 +176,36 @@ if ($queuepending && confirm_sesskey()) {
             'queuepending' => 1,
             'sesskey' => sesskey(),
         ]);
-        echo html_writer::tag('section',
-            html_writer::tag('div',
+        echo html_writer::tag(
+            'section',
+            html_writer::tag(
+                'div',
                 html_writer::span(
                     html_writer::tag('i', '', ['class' => 'fa fa-upload', 'aria-hidden' => 'true']),
                     'rg-action-panel__icon'
                 ) .
-                html_writer::tag('div',
-                    html_writer::tag('h3', get_string('pendingindexingtitle', 'local_ragingest'),
-                        ['class' => 'rg-action-panel__title']) .
-                    html_writer::tag('p', get_string('pendingindexingcount', 'local_ragingest', $pendingcount),
-                        ['class' => 'rg-action-panel__body']),
+                html_writer::tag(
+                    'div',
+                    html_writer::tag(
+                        'h3',
+                        get_string('pendingindexingtitle', 'local_ragingest'),
+                        ['class' => 'rg-action-panel__title']
+                    ) .
+                    html_writer::tag(
+                        'p',
+                        get_string('pendingindexingcount', 'local_ragingest', $pendingcount),
+                        ['class' => 'rg-action-panel__body']
+                    ),
                     ['class' => 'rg-action-panel__text']
                 ),
                 ['class' => 'rg-action-panel__main']
             ) .
-            html_writer::tag('form',
+            html_writer::tag(
+                'form',
                 html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'queuepending', 'value' => '1']) .
                 html_writer::empty_tag('input', ['type' => 'hidden', 'name' => 'sesskey', 'value' => sesskey()]) .
-                html_writer::tag('button',
+                html_writer::tag(
+                    'button',
                     html_writer::tag('i', '', ['class' => 'fa fa-play', 'aria-hidden' => 'true']) .
                     html_writer::span(get_string('indexreleasedcourses', 'local_ragingest')),
                     ['type' => 'submit', 'class' => 'btn btn-primary rg-primary-action']
@@ -204,7 +216,8 @@ if ($queuepending && confirm_sesskey()) {
         );
     }
 
-    echo html_writer::tag('section',
+    echo html_writer::tag(
+        'section',
         html_writer::tag('h3', get_string('manualreindex', 'local_ragingest'), ['class' => 'rg-section-title']) .
         html_writer::tag('p', get_string('manualreindex_desc', 'local_ragingest'), ['class' => 'rg-section-desc']) .
         html_writer::start_tag('form', [
@@ -224,7 +237,8 @@ if ($queuepending && confirm_sesskey()) {
             'required' => 'required',
             'min' => '1',
         ]) .
-        html_writer::tag('button',
+        html_writer::tag(
+            'button',
             html_writer::tag('i', '', ['class' => 'fa fa-rotate', 'aria-hidden' => 'true']) .
             html_writer::span(get_string('reindexcourse', 'local_ragingest')),
             ['type' => 'submit', 'class' => 'btn btn-secondary rg-secondary-action']

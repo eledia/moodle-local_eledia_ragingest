@@ -70,8 +70,13 @@ class extractor implements content_extractor {
         // Pre-fetch entry aliases (secondary search terms / synonyms) so they
         // are indexed alongside the primary concept.
         [$insql, $inparams] = $DB->get_in_or_equal(array_keys($entries), SQL_PARAMS_NAMED);
-        $aliasrows = $DB->get_records_select('glossary_alias', "entryid {$insql}", $inparams,
-            'id ASC', 'id, entryid, alias');
+        $aliasrows = $DB->get_records_select(
+            'glossary_alias',
+            "entryid {$insql}",
+            $inparams,
+            'id ASC',
+            'id, entryid, alias'
+        );
         $aliasesbyentry = [];
         foreach ($aliasrows as $row) {
             $alias = trim((string) $row->alias);

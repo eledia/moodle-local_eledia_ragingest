@@ -298,8 +298,10 @@ class ingestion_manager {
             ];
         }
 
-        $documents = array_values(array_filter($documents,
-            static fn($d) => !empty($d['content']) && !empty($d['suffix'])));
+        $documents = array_values(array_filter(
+            $documents,
+            static fn($d) => !empty($d['content']) && !empty($d['suffix'])
+        ));
 
         if (empty($documents)) {
             return [
@@ -342,8 +344,11 @@ class ingestion_manager {
             'module_name' => $modulename,
             'success' => $ok,
             'status' => $ok ? 'success' : 'error',
-            'message' => get_string('ingestionmultisummary', 'local_ragingest',
-                (object) ['sent' => $sent, 'failed' => $failed]),
+            'message' => get_string(
+                'ingestionmultisummary',
+                'local_ragingest',
+                (object) ['sent' => $sent, 'failed' => $failed]
+            ),
         ];
     }
 
@@ -398,7 +403,10 @@ class ingestion_manager {
 
         if (strlen($document['content']) > $maxsizebytes) {
             [$document['content'], $wastruncated] = document::truncate(
-                $document['content'], $document['content_type'], $maxsizebytes);
+                $document['content'],
+                $document['content_type'],
+                $maxsizebytes
+            );
 
             if (!$wastruncated) {
                 $sizemb = round(strlen($document['content']) / (1024 * 1024), 2);
@@ -412,8 +420,11 @@ class ingestion_manager {
                 ];
             }
 
-            mtrace(get_string('contenttruncatedlog', 'local_ragingest',
-                (object) ['cmid' => $cm->id, 'max' => $maxsizemb]));
+            mtrace(get_string(
+                'contenttruncatedlog',
+                'local_ragingest',
+                (object) ['cmid' => $cm->id, 'max' => $maxsizemb]
+            ));
         }
 
         $sizebytes = strlen($document['content']);

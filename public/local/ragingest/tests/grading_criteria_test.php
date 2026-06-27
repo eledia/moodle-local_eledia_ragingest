@@ -50,8 +50,13 @@ final class grading_criteria_test extends \advanced_testcase {
 
         /** @var \gradingform_rubric_generator $rubricgen */
         $rubricgen = $this->getDataGenerator()->get_plugin_generator('gradingform_rubric');
-        $rubricgen->create_instance($context, 'mod_assign', 'submissions',
-            'Essay rubric', 'Overall assessment of the essay', [
+        $rubricgen->create_instance(
+            $context,
+            'mod_assign',
+            'submissions',
+            'Essay rubric',
+            'Overall assessment of the essay',
+            [
                 'Structure and argument' => [
                     'Poorly structured' => 0,
                     'Clear and well argued' => 5,
@@ -60,7 +65,8 @@ final class grading_criteria_test extends \advanced_testcase {
                     'No sources cited' => 0,
                     'Sources well integrated' => 3,
                 ],
-            ]);
+            ]
+        );
 
         $html = grading_criteria::html($context->id, 'mod_assign', 'submissions');
 
@@ -87,10 +93,16 @@ final class grading_criteria_test extends \advanced_testcase {
 
         /** @var \gradingform_rubric_generator $rubricgen */
         $rubricgen = $this->getDataGenerator()->get_plugin_generator('gradingform_rubric');
-        $rubricgen->create_instance($context, 'mod_assign', 'submissions',
-            'Essay rubric', 'How your essay is graded', [
+        $rubricgen->create_instance(
+            $context,
+            'mod_assign',
+            'submissions',
+            'Essay rubric',
+            'How your essay is graded',
+            [
                 'Originality' => ['Derivative' => 0, 'Highly original' => 4],
-            ]);
+            ]
+        );
 
         $modinfo = get_fast_modinfo($course->id);
         $cm = $modinfo->get_cm($assign->cmid);

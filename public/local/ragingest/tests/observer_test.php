@@ -288,7 +288,7 @@ final class observer_test extends \advanced_testcase {
             'classname' => '\\local_ragingest\\task\\ingest_module_task',
         ]);
 
-        // record_created fires in the module context.
+        // Record_created fires in the module context.
         $recordid = $DB->insert_record('data_records', (object) [
             'dataid' => $data->id, 'userid' => $USER->id,
             'timecreated' => time(), 'timemodified' => time(), 'approved' => 1,
@@ -376,7 +376,10 @@ final class observer_test extends \advanced_testcase {
             'classname' => '\\local_ragingest\\task\\ingest_module_task',
         ]);
         $cmids = array_map(static fn($t) => json_decode($t->customdata)->cmid, $tasks);
-        $this->assertContains((int) $quiz->cmid, array_map('intval', $cmids),
-            'Editing a question should re-ingest the quiz that references it.');
+        $this->assertContains(
+            (int) $quiz->cmid,
+            array_map('intval', $cmids),
+            'Editing a question should re-ingest the quiz that references it.'
+        );
     }
 }

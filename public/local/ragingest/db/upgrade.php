@@ -70,5 +70,10 @@ function xmldb_local_ragingest_upgrade(int $oldversion): bool {
         upgrade_plugin_savepoint(true, 2026061303, 'local', 'ragingest');
     }
 
+    if ($oldversion < 2026062700) {
+        // Code-only release: submission documentation, AMD build and coding-style cleanup.
+        upgrade_plugin_savepoint(true, 2026062700, 'local', 'ragingest');
+    }
+
     return true;
 }

@@ -63,7 +63,7 @@ final class course_state_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course(['category' => $cat->id]);
         set_config('enabledcategories', (string) $cat->id, 'local_ragingest');
 
-        $manager = new class([[
+        $manager = new class ([[
             'cmid' => 17,
             'success' => false,
             'status' => 'error',
@@ -137,14 +137,18 @@ final class course_state_test extends \advanced_testcase {
         // Unmarked and not ingested → matches → not queued.
         $this->getDataGenerator()->create_course();
 
-        $DB->delete_records('task_adhoc',
-            ['classname' => '\\local_ragingest\\task\\reconcile_course_task']);
+        $DB->delete_records(
+            'task_adhoc',
+            ['classname' => '\\local_ragingest\\task\\reconcile_course_task']
+        );
 
         $queued = course_state::queue_divergent_reconciles();
 
         $this->assertSame(1, $queued);
-        $tasks = $DB->get_records('task_adhoc',
-            ['classname' => '\\local_ragingest\\task\\reconcile_course_task']);
+        $tasks = $DB->get_records(
+            'task_adhoc',
+            ['classname' => '\\local_ragingest\\task\\reconcile_course_task']
+        );
         $this->assertCount(1, $tasks);
         $this->assertEquals($marked->id, json_decode(reset($tasks)->customdata)->courseid);
     }

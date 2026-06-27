@@ -234,8 +234,10 @@ class h5p_text_extractor {
         $consumed = [];
 
         // Multiple/single choice: question + answers[] (each {text, correct?}).
-        if (isset($node['question']) && is_string($node['question'])
-                && isset($node['answers']) && is_array($node['answers']) && array_is_list($node['answers'])) {
+        if (
+            isset($node['question']) && is_string($node['question'])
+                && isset($node['answers']) && is_array($node['answers']) && array_is_list($node['answers'])
+        ) {
             $q = self::clean($node['question']);
             if ($q !== '') {
                 $blocks[] = 'Question: ' . $q;
@@ -267,9 +269,11 @@ class h5p_text_extractor {
         }
 
         // True/False: question + correct (bool or "true"/"false"), no answers[].
-        if (!isset($consumed['question']) && isset($node['question']) && is_string($node['question'])
+        if (
+            !isset($consumed['question']) && isset($node['question']) && is_string($node['question'])
                 && isset($node['correct'])
-                && (is_bool($node['correct']) || in_array($node['correct'], ['true', 'false'], true))) {
+                && (is_bool($node['correct']) || in_array($node['correct'], ['true', 'false'], true))
+        ) {
             $q = self::clean($node['question']);
             if ($q !== '') {
                 $blocks[] = 'Question: ' . $q;

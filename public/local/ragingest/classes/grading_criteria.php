@@ -83,17 +83,25 @@ class grading_criteria {
     private static function rubric(int $definitionid): string {
         global $DB;
 
-        $criteria = $DB->get_records('gradingform_rubric_criteria',
-            ['definitionid' => $definitionid], 'sortorder ASC', 'id, description');
+        $criteria = $DB->get_records(
+            'gradingform_rubric_criteria',
+            ['definitionid' => $definitionid],
+            'sortorder ASC',
+            'id, description'
+        );
         if (empty($criteria)) {
             return '';
         }
 
         $criterionids = array_keys($criteria);
         [$insql, $params] = $DB->get_in_or_equal($criterionids, SQL_PARAMS_NAMED);
-        $levels = $DB->get_records_select('gradingform_rubric_levels',
-            "criterionid {$insql}", $params, 'criterionid ASC, score ASC',
-            'id, criterionid, score, definition');
+        $levels = $DB->get_records_select(
+            'gradingform_rubric_levels',
+            "criterionid {$insql}",
+            $params,
+            'criterionid ASC, score ASC',
+            'id, criterionid, score, definition'
+        );
         $levelsbycriterion = [];
         foreach ($levels as $level) {
             $levelsbycriterion[$level->criterionid][] = $level;
@@ -133,9 +141,12 @@ class grading_criteria {
     private static function guide(int $definitionid): string {
         global $DB;
 
-        $criteria = $DB->get_records('gradingform_guide_criteria',
-            ['definitionid' => $definitionid], 'sortorder ASC',
-            'id, shortname, description, descriptionmarkers');
+        $criteria = $DB->get_records(
+            'gradingform_guide_criteria',
+            ['definitionid' => $definitionid],
+            'sortorder ASC',
+            'id, shortname, description, descriptionmarkers'
+        );
         if (empty($criteria)) {
             return '';
         }

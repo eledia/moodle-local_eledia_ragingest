@@ -1,211 +1,247 @@
-# local_ragingest — RAG Content Ingestion for Moodle
+# local_ragingest - RAG Content Ingestion for Moodle
 
-A Moodle local plugin that extracts course content from activity modules and sends it to an external **Retrieval-Augmented Generation (RAG)** ingestion API. Designed for Moodle 5.x (requires Moodle 4.5+).
+English | [Deutsch](README.de.md)
 
-## Overview
+`local_ragingest` is a Moodle local plugin that extracts selected course content
+and sends it to an external Retrieval-Augmented Generation (RAG) ingestion
+service. It is designed for controlled, opt-in indexing: no course is ingested
+unless it is explicitly released through a pilot-course list, a category
+allow-list, or a course-level override.
 
-`local_ragingest` bridges Moodle's LMS content with an external vector-database-backed RAG service. When course modules are created, updated, or deleted, the plugin automatically queues ad-hoc tasks that extract content and push it to the configured API endpoint. A manual **Reindex** admin page is also provided for bulk operations.
+The plugin is part of the eLeDia.ai Tutor / LiteRAG admin flow. Its settings,
+status panel, reindex page, and DevFlow documentation are rendered in the shared
+plugin shell when that shell is available.
 
-The plugin uses a **subplugin architecture** (`ragingestextractor`) to support per-activity-type content extraction. Seventeen extractors ship out of the box, covering all major core activity modules; adding new ones requires only three files.
+## Status
+
+| Item | Current state |
+|---|---|
+| Moodle component | `local_ragingest` |
+| Plugin type | Local plugin installed at `local/ragingest` |
+| Supported Moodle versions | `4.5` to `5.1` in `version.php` |
+| Local compatibility check | Moodle `5.2.1` passes the PHPUnit suite |
+| PHP | Moodle-supported PHP for the target Moodle version |
+| Maturity | Beta |
+| Working branch | `review_johannes` |
+
+Moodle 5.2.1 is already used locally for development and tests, but the official
+`supported` metadata is still `[405, 501]`. Raise that only after the final
+compatibility review is complete.
 
 ## Features
 
-- **Opt-in course marking** — only courses you select are ingested. An admin **category allow-list** enables whole categories (and their subcategories); a **central pilot-course list** names specific courses (by short name or id) regardless of category; and a per-course **"RAG ingestion"** custom field (Default / Include / Exclude, auto-created on install) overrides per course. Un-marking a course **purges** its already-indexed content (changes to the central lists reconcile immediately, with a nightly task as a safety net). With nothing selected, nothing is ingested.
-- **Test-phase lock-down** — with the **Lock course marking** setting enabled, the per-course "RAG ingestion" field has **no effect at all**: only the pilot-course list and the category allow-list decide what is ingested. The field is also locked against teacher editing (visible read-only); existing per-course values are kept and become effective again when the lock is disabled.
-- **Automatic ingestion** — event observers react to module create/update/delete plus sub-content edits: book chapters, glossary entries, lesson pages, wiki pages, **database records**, **quiz structure changes** (questions added/removed/reordered), and **question-bank edits** (which re-ingest every quiz that references the edited question)
-- **Bulk reindex** — admin page to re-ingest all modules in a course at once
-- **Retry logic** — HTTP client retries failed requests up to 3 times with exponential backoff (1 s, 2 s)
-- **Size limit enforcement** — configurable maximum document size; oversized **text** content is truncated (UTF-8 safe) and still sent so large activities are partially indexed rather than dropped, while oversized binary files (PDF) are skipped
-- **Assessment criteria indexed** — advanced grading rubrics and marking guides (core `gradingform`) are extracted for assignments, the grading-strategy dimensions (accumulative / comments / number-of-errors / rubric) are extracted for workshops, and database field definitions describe the records' schema
-- **Multi-document modules** — a Folder is ingested as one document **per file** (each PDF keeps its native `application/pdf` type and is parsed independently, instead of being reduced to a filename), using sub-document `source_id`s (`…:cmidN:fileK`); module re-ingest and deletion clear the whole set with a prefix-scoped delete (API spec v1.1)
-- **Deterministic source IDs** — format `{tenant}:course{id}:cmid{id}` ensures idempotent upserts
-- **Multi-tenant support** — the tenant identity is **derived from the site's `wwwroot`** (no setting to configure or mistype) and included in every payload and source ID, alongside the raw `site_url`; the RAG service resolves the same identity at query time from the verified site URL, so write- and read-path tenants can never drift or collide
-- **Activity-name heading** — every document is prefixed centrally with the activity's name (as an `<h1>` for HTML, a title line for plain text) so each chunk the RAG service derives is attributable to its activity; skipped for binary PDFs and when an extractor already supplies its own leading heading
-- **Descriptions & synonyms indexed** — activity intros are captured where previously dropped (glossary, Video Time, H5P), glossary entry **aliases** are indexed as synonyms, and quiz question **hints** are included alongside questions and answers
-- **Structure-aware H5P extraction** — recognises the common H5P shapes (multiple/single choice, true/false, fill-in-the-blanks, drag text, mark the words, summary, dialog/flash cards, accordion, and the `action`-nested interactive types: Course Presentation, Interactive Video, Branching Scenario, Interactive Book) and emits **labelled** text (`Question:` / `Correct answer:` / `Answer:` / `Cloze:` / `Section:`) so the question↔answer relationship survives into the embeddings; unknown types fall back to a generic content walk
-- **Deployment-independent H5P** — content is read straight from the `.h5p` package (`content/content.json`) when the activity has not been deployed/viewed yet, so it is indexable immediately (the deployed record is still used when present)
-- **H5P placeholder resolution** — detects H5P embedded in rich-text fields and inlines the extracted, labelled text (each block as its own paragraph)
-- **Subplugin extensibility** — add support for any activity module without modifying core plugin code
-- **Debug server** — zero-dependency Python mock server for local development and testing
-
-## Requirements
-
-| Requirement | Version |
-|---|---|
-| Moodle | 4.5, 5.0, or 5.1 |
-| PHP | 8.1+ |
-| RAG API | Any service implementing the `/documents/upsert` and `/documents/delete` endpoints (see [API Contract](#api-contract)) |
+- **Opt-in indexing:** courses are ingested only when released through the
+  central pilot-course list, category allow-list, or course custom field.
+- **Searchable course selection:** pilot courses and categories use Moodle
+  autocomplete controls with search, chips, and multi-select.
+- **Course marking lock:** during pilot phases the course custom field can be
+  made read-only/inert so only central admin settings decide.
+- **Automatic reconciliation:** changes to connection, limits, category, pilot,
+  or lock settings queue reconciliation for divergent courses.
+- **Indexing status:** the settings page shows when released courses are still
+  waiting for indexing and offers a prominent bulk-index action.
+- **Automatic ingestion:** Moodle events queue ad-hoc tasks for module create,
+  update, delete, and supported subcontent changes.
+- **Manual reindex:** admins can index all pending released courses or reindex
+  one course by ID.
+- **Health checks:** the API client derives and checks a health endpoint for
+  LiteRAG-style local routes.
+- **Subplugin extractors:** activity-specific extraction lives in
+  `ragingestextractor_*` subplugins.
+- **Multi-document modules:** folders and similar modules can send multiple
+  documents using suffix-based source IDs and prefix deletes.
+- **Deterministic source IDs:** IDs include tenant, course ID, module ID, and
+  optional document suffix.
+- **Tenant from site URL:** tenant identity is derived from `$CFG->wwwroot`.
+  There is deliberately no free-text tenant setting.
+- **Privacy metadata:** the privacy provider declares the external transfer of
+  course/module metadata and extracted content to the RAG service.
 
 ## Installation
 
-1. Copy the `local/ragingest/` directory to your Moodle installation at `{moodleroot}/local/ragingest/`.
+1. Copy the plugin directory to the Moodle codebase:
 
-2. Visit **Site Administration → Notifications** to trigger the plugin install.
+   ```text
+   local/ragingest
+   ```
 
-3. Navigate to **Site Administration → Plugins → Local plugins → RAG Content Ingestion** and configure:
+2. Run Moodle upgrade through Site administration or CLI:
+
+   ```bash
+   php admin/cli/upgrade.php --non-interactive
+   ```
+
+3. Open the settings page:
+
+   ```text
+   /admin/settings.php?section=local_ragingest_settings
+   ```
+
+4. Configure the RAG endpoint and API key.
+
+5. Release one or more pilot courses, then run Moodle cron so queued ad-hoc
+   tasks can process the indexing work.
+
+## Admin Settings
+
+All settings live on one page:
+
+```text
+/admin/settings.php?section=local_ragingest_settings
+```
+
+When the eLeDia.ai Tutor shell is present, this page appears in the shared
+navigation with the active menu item **RAG-Ingest**. The plugin no longer splits
+setup across several Moodle admin menus.
+
+### Connection
 
 | Setting | Description | Default |
 |---|---|---|
-| **RAG Endpoint URL** | Full URL to the upsert endpoint | `http://rag-service:8001/documents/upsert` |
-| **API Key** | Bearer key sent as `X-API-Key` header | *(empty — required)* |
-| **Tenant ID** | Identifies the Moodle instance in multi-tenant setups | *(empty → `default`)* |
-| **Max Document Size (MB)** | Documents exceeding this size are skipped | `20` |
-| **Request Timeout (seconds)** | HTTP timeout per request attempt | `30` |
+| RAG Endpoint URL | Upsert endpoint or LiteRAG ingest route | `http://rag-service:8001/documents/upsert` |
+| API Key | Secret sent as `X-API-Key` | empty |
+| Allow private target | Enables Moodle cURL `ignoresecurity` for local/private targets | off |
 
-> **Note:** The delete endpoint URL is derived automatically by replacing `/upsert` with `/delete` in the configured endpoint URL.
+Supported endpoint shapes include:
 
-## Architecture
+- `http://rag-service:8001/documents/upsert`
+- `http://localhost:8080/local/literag/ingest.php`
+- `http://localhost:8080/local/literag/ingest.php/upsert`
+- `http://localhost:8080/local/literag/ingest.php?action=upsert`
 
-```
-local/ragingest/
-├── classes/
-│   ├── content_extractor.php      # Interface for subplugin extractors
-│   ├── api_client.php             # HTTP client with retry logic
-│   ├── ingestion_manager.php      # Central orchestrator
-│   ├── observer.php               # Event observer (queues ad-hoc tasks)
-│   ├── source_id_helper.php       # Deterministic source ID builder
-│   ├── h5p_embed_helper.php       # Resolves H5P placeholders in HTML
-│   ├── h5p_text_extractor.php     # Extracts text from H5P JSON content
-│   ├── plugininfo/
-│   │   └── ragingestextractor.php # Subplugin type info class
-│   └── task/
-│       ├── ingest_module_task.php  # Ad-hoc task: extract + upsert
-│       └── delete_module_task.php  # Ad-hoc task: delete from RAG
-├── db/
-│   ├── access.php                 # Capability: local/ragingest:reindex
-│   ├── events.php                 # Event observer registrations
-│   └── subplugins.json            # Declares ragingestextractor type
-├── lang/en/local_ragingest.php    # Language strings
-├── subplugins/                    # Extractor subplugins (see below)
-│   ├── assign/
-│   ├── book/
-│   ├── data/
-│   ├── feedback/
-│   ├── folder/
-│   ├── glossary/
-│   ├── h5pactivity/
-│   ├── imscp/
-│   ├── label/
-│   ├── lesson/
-│   ├── page/
-│   ├── quiz/
-│   ├── resource/
-│   ├── scorm/
-│   ├── videotime/
-│   ├── wiki/
-│   └── workshop/
-├── tests/                         # PHPUnit test suite
-├── debug_server.py                # Python mock RAG server
-├── reindex.php                    # Admin bulk-reindex page
-├── settings.php                   # Admin settings page
-└── version.php                    # Plugin metadata
-```
+For LiteRAG routes, health, upsert, and delete URLs are derived automatically.
+For `/documents/upsert`, delete is derived by replacing `/upsert` with
+`/delete`.
 
-### Data Flow
+`allow_private_target` exists because Moodle normally protects cURL calls from
+private, loopback, and otherwise blocked targets. Keep it off for public
+endpoints and enable it only intentionally for local Docker/service-name
+targets.
 
-```
-┌──────────────┐     event      ┌──────────┐    queue     ┌─────────────────┐
-│ Moodle Core  │ ──────────────▶│ Observer  │ ──────────▶  │ Ad-hoc Task     │
-│ (CRUD on CM) │                └──────────┘              │ (ingest/delete) │
-└──────────────┘                                          └────────┬────────┘
-                                                                   │
-                                                                   ▼
-                                                       ┌──────────────────────┐
-                                                       │  Ingestion Manager   │
-                                                       │  1. Find extractor   │
-                                                       │  2. Extract content  │
-                                                       │  3. Validate + size  │
-                                                       │  4. Build payload    │
-                                                       └──────────┬───────────┘
-                                                                  │
-                                                                  ▼
-                                                        ┌─────────────────┐
-                                                        │   API Client    │
-                                                        │ POST /upsert    │
-                                                        │ (retry ×3)      │
-                                                        └────────┬────────┘
-                                                                 │
-                                                                 ▼
-                                                       ┌──────────────────┐
-                                                       │  External RAG    │
-                                                       │  Service         │
-                                                       └──────────────────┘
-```
+### Course Selection
 
-### Key Classes
-
-| Class | Responsibility |
+| Setting | Description |
 |---|---|
-| `\local_ragingest\content_extractor` | **Interface** — all subplugin extractors implement `supports(\cm_info)` and `extract(\cm_info)` |
-| `\local_ragingest\ingestion_manager` | Discovers extractors via `\core_component`, orchestrates extraction, validates payloads, enforces size limits, calls API client |
-| `\local_ragingest\api_client` | Sends HTTP requests with `X-API-Key` auth, retry logic (max 3 attempts, exponential backoff), and `ignoresecurity` flag to bypass Moodle's cURL URL blocker for non-standard ports |
-| `\local_ragingest\observer` | Handles `course_module_created/updated/deleted` events by queuing ad-hoc tasks |
-| `\local_ragingest\source_id_helper` | Builds deterministic source IDs in the format `{tenant}:course{id}:cmid{id}` |
-| `\local_ragingest\task\ingest_module_task` | Ad-hoc task that calls `ingestion_manager::ingest_module()` |
-| `\local_ragingest\task\delete_module_task` | Ad-hoc task that calls `ingestion_manager::delete_module()` |
-| `\local_ragingest\h5p_embed_helper` | Detects `<div class="h5p-placeholder">` in HTML and replaces them with extracted H5P text, or strips them if unresolvable |
-| `\local_ragingest\h5p_text_extractor` | Structure-aware extraction of labelled text from H5P content JSON (questions, correct/incorrect answers, cloze, cards, summaries, accordion, `action`-nested interactive types); resolves the content JSON from the deployed record or directly from the `.h5p` package zip |
-| `\local_ragingest\plugininfo\ragingestextractor` | Tells Moodle's plugin manager how to handle the `ragingestextractor` subplugin type |
+| Ingested course categories | Searchable multi-select of categories. Courses in selected categories or subcategories are released. |
+| Pilot courses | Searchable multi-select of specific courses. Intended for controlled pilots. |
+| Lock course marking | Makes the course custom field inert/read-only so only central settings decide. |
+
+The course custom field **RAG ingestion** is created on install. When course
+marking is not locked, it supports:
+
+- `Default`: central pilot/category rules decide.
+- `Include`: release this course even when central rules do not.
+- `Exclude`: prevent indexing even when central rules would release it.
+
+When marking is locked, existing field values are kept but ignored until the
+lock is disabled again.
+
+### Limits
+
+| Setting | Description | Default |
+|---|---|---|
+| Max document size (MB) | Text/HTML above the limit is truncated; oversized binary files are skipped | `20` |
+| Request timeout (seconds) | Timeout per HTTP request attempt | `30` |
+
+## Indexing Status and Reindex
+
+The top of the settings page shows a status panel:
+
+- **Released courses are indexed:** no released courses are waiting for
+  indexing.
+- **Released courses are waiting for indexing:** one or more released courses
+  have not yet been indexed successfully.
+
+When courses are waiting, the primary action **Index released courses now**
+queues the pending courses as Moodle ad-hoc tasks. The secondary action opens:
+
+```text
+/local/ragingest/reindex.php
+```
+
+The reindex page offers:
+
+- bulk queuing for released courses that are not indexed yet
+- manual reindex of one course by numeric Moodle course ID
+
+Course state is persisted in `local_ragingest_course`. A course is marked
+`ingested = 1` only when a reindex run completes without error results. Skipped
+modules do not count as errors, so empty or unsupported courses do not get
+queued forever.
+
+## What Gets Indexed
+
+The plugin indexes content from released courses only. It never indexes:
+
+- the site course
+- deleted or invisible course modules
+- courses without opt-in release
+- unsupported module types
+- empty activities
+- oversized binary files
+- personal learner responses in Feedback and similar extractors where those
+  responses are intentionally excluded
+
+Supported event triggers include:
+
+- course module created, updated, deleted
+- book chapter changes
+- glossary entry changes
+- lesson page changes
+- wiki page changes
+- database record changes
+- quiz structure changes
+- question-bank changes that affect quizzes
 
 ## Bundled Extractors
 
-### Simple Content Modules
+The plugin ships extractors for the common core activity types plus selected
+package/interactive modules.
 
-| Subplugin | Activity | Content Type | Extraction Strategy |
-|---|---|---|---|
-| `ragingestextractor_page` | Page | `text/html` | Returns the page's `content` field |
-| `ragingestextractor_label` | Label | `text/html` | Returns the label's `intro` field |
-| `ragingestextractor_assign` | Assignment | `text/html` | Extracts intro + activity instructions (no student submissions) |
-| `ragingestextractor_workshop` | Workshop | `text/html` | Extracts intro, author/reviewer instructions, and conclusion |
+| Subplugin | Activity | Notes |
+|---|---|---|
+| `assign` | Assignment | Intro, activity instructions, grading criteria; no student submissions |
+| `book` | Book | Visible chapters/subchapters in reading order |
+| `data` | Database | Field definitions and approved records; user responses are scoped to record content |
+| `feedback` | Feedback | Question/item definitions; no submitted responses |
+| `folder` | Folder | One document per supported file, preserving PDF MIME type |
+| `glossary` | Glossary | Description, approved entries, aliases/synonyms |
+| `h5pactivity` | H5P Activity | Labelled educational text from H5P JSON/package content |
+| `imscp` | IMS content package | Manifest structure and HTML body content |
+| `label` | Text/media area | Intro content |
+| `lesson` | Lesson | Page sequence, answers, feedback where relevant |
+| `page` | Page | Page content |
+| `quiz` | Quiz | Questions, answers, feedback, hints, and overall feedback |
+| `resource` | File | Supported text, HTML, and PDF files |
+| `scorm` | SCORM | Intro, SCO titles, and local HTML launch pages |
+| `videotime` | Video Time | Intro and VTT captions/transcript |
+| `wiki` | Wiki | Intro and subwiki pages |
+| `workshop` | Workshop | Intro, instructions, conclusion, grading dimensions |
 
-### Structured Content Modules
-
-| Subplugin | Activity | Content Type | Extraction Strategy |
-|---|---|---|---|
-| `ragingestextractor_book` | Book | `text/html` | Combines all visible chapters with `<h2>` (chapters) and `<h3>` (subchapters) headings |
-| `ragingestextractor_glossary` | Glossary | `text/html` | Glossary description plus all approved entries as an HTML `<dl>`, including each entry's aliases (synonyms) |
-| `ragingestextractor_lesson` | Lesson | `text/html` | Walks the page linked-list in navigation order; includes answer options and feedback. Structural pages (cluster, end-of-branch) are skipped |
-| `ragingestextractor_wiki` | Wiki | `text/html` | Extracts intro + all sub-wiki pages' cached HTML content ordered by title |
-| `ragingestextractor_quiz` | Quiz | `text/html` | Resolves quiz slots through the question bank reference chain; extracts question text, answer options, feedback, question hints, and overall feedback bands |
-| `ragingestextractor_data` | Database | `text/html` | Extracts intro + all approved records' text-type field values (`text`, `textarea`, `url`, `menu`, etc.) with field labels |
-| `ragingestextractor_feedback` | Feedback | `text/html` | Extracts intro + question/item definitions with multichoice options parsed from the presentation field. User responses are **never** included |
-
-### File-based Modules
-
-| Subplugin | Activity | Content Type | Extraction Strategy |
-|---|---|---|---|
-| `ragingestextractor_resource` | File (resource) | auto-detected | Reads the main file from Moodle file storage; only sends `text/plain`, `text/html`, and `application/pdf` |
-| `ragingestextractor_folder` | Folder | auto-detected | Extracts intro + all supported files (PDF, text, HTML). Single file preserves native MIME type; multiple files are wrapped in HTML |
-
-### Interactive / Package Modules
-
-| Subplugin | Activity | Content Type | Extraction Strategy |
-|---|---|---|---|
-| `ragingestextractor_h5pactivity` | H5P Activity | `text/plain` | Labelled educational text from the H5P content (questions, correct/incorrect answers, cloze, cards, summaries, accordion, nested interactive types), prefixed with the activity name. Works without prior deployment by reading the package directly. |
-| `ragingestextractor_imscp` | IMS Content Package | `text/html` | Parses the manifest structure for page ordering and extracts `<body>` content from all HTML pages in the deployed package |
-| `ragingestextractor_scorm` | SCORM | `text/html` | Extracts intro + SCO titles as table of contents. For locally-stored packages, also reads text from HTML launch pages |
-| `ragingestextractor_videotime` | Video Time | `text/plain` | The video description (intro) followed by the concatenated VTT subtitle/caption transcript, stripping timestamps and formatting tags |
-
-> **Note:** H5P placeholders embedded in any rich-text field (e.g., a label or page intro) are automatically resolved by the `h5p_embed_helper` during ingestion, regardless of which extractor produced the HTML.
+HTML produced by extractors is centrally post-processed for embedded H5P
+placeholders where possible.
 
 ## API Contract
 
 ### Upsert
 
-```
+```http
 POST /documents/upsert
 X-API-Key: <configured key>
 Content-Type: application/json
+```
 
+```json
 {
-    "source_id": "my-tenant:course42:cmid99",
+    "source_id": "localhost:course42:cmid99",
     "content": "<base64-encoded content>",
     "content_type": "text/html",
     "qdrant_metadata": {
-        "tenant_id": "my-tenant",
+        "tenant_id": "localhost",
+        "site_url": "http://localhost:8080",
         "course_id": 42,
         "cmid": 99,
-        "module_url": "https://moodle.example.com/mod/page/view.php?id=99"
+        "module_url": "http://localhost:8080/mod/page/view.php?id=99"
     },
     "parser_options": null
 }
@@ -213,178 +249,283 @@ Content-Type: application/json
 
 ### Delete
 
-```
+```http
 POST /documents/delete
 X-API-Key: <configured key>
 Content-Type: application/json
+```
 
+```json
 {
-    "source_id": "my-tenant:course42:cmid99"
+    "source_id": "localhost:course42:cmid99"
 }
 ```
 
-### Allowed Content Types
+Multi-document modules use suffixes such as:
+
+```text
+localhost:course42:cmid99:file1
+```
+
+Before a multi-document upsert, the manager clears the previous document set
+with a prefix-scoped delete.
+
+Allowed content types:
 
 - `text/plain`
 - `text/html`
 - `application/pdf`
 
-The RAG service is expected to handle parsing and chunking based on `content_type`. No `activity_type` field is sent — the service infers document structure from the content itself.
+## Architecture
 
-## Writing a New Extractor
-
-To add support for a new activity module (e.g., `mod_wiki`), create a subplugin with three files:
-
-### 1. `subplugins/wiki/version.php`
-
-```php
-<?php
-defined('MOODLE_INTERNAL') || die();
-
-$plugin->version   = 2026031100;
-$plugin->requires  = 2025100600;
-$plugin->component = 'ragingestextractor_wiki';
+```text
+Moodle event
+  -> local_ragingest\observer
+  -> Moodle ad-hoc task
+  -> local_ragingest\ingestion_manager
+  -> ragingestextractor_* subplugin
+  -> document normalization
+  -> local_ragingest\api_client
+  -> external RAG service
 ```
 
-### 2. `subplugins/wiki/lang/en/ragingestextractor_wiki.php`
+Key classes:
 
-```php
-<?php
-defined('MOODLE_INTERNAL') || die();
+| Class | Responsibility |
+|---|---|
+| `content_extractor` | Interface for activity extractors |
+| `multi_document_extractor` | Optional interface for modules that emit several documents |
+| `ingestion_manager` | Discovers extractors, validates/normalizes documents, calls the API |
+| `api_client` | HTTP client, endpoint derivation, health/upsert/delete calls |
+| `course_gate` | Computes whether a course should be ingested |
+| `course_state` | Persists current index state and queues reconciliation |
+| `observer` | Converts Moodle events into background tasks |
+| `source_id_helper` | Builds deterministic source IDs |
+| `tenant` | Derives tenant identity from `$CFG->wwwroot` |
+| `h5p_embed_helper` | Resolves embedded H5P placeholders in HTML |
+| `h5p_text_extractor` | Extracts labelled text from H5P content JSON/packages |
+| `output\shell` | Adapts plugin pages to the eLeDia.ai Tutor shell |
 
-$string['pluginname'] = 'Wiki content extractor';
+Tasks:
+
+| Task | Purpose |
+|---|---|
+| `ingest_module_task` | Extract and upsert one course module |
+| `delete_module_task` | Delete one course module document set |
+| `reconcile_course_task` | Bring one course into the desired indexed/purged state |
+| `reconcile_all_task` | Periodic safety net for divergent courses |
+
+## Writing an Extractor
+
+Create a subplugin under:
+
+```text
+subplugins/{name}/
+├── version.php
+├── classes/extractor.php
+└── lang/en/ragingestextractor_{name}.php
 ```
 
-### 3. `subplugins/wiki/classes/extractor.php`
+The extractor class is:
 
 ```php
-<?php
-namespace ragingestextractor_wiki;
+namespace ragingestextractor_{name};
 
 use local_ragingest\content_extractor;
 
-class extractor implements content_extractor {
-
+final class extractor implements content_extractor {
     public function supports(\cm_info $cm): bool {
-        return $cm->modname === 'wiki';
+        return $cm->modname === '{name}';
     }
 
     public function extract(\cm_info $cm): ?array {
-        global $DB;
-
-        $wiki = $DB->get_record('wiki', ['id' => $cm->instance], '*', MUST_EXIST);
-
-        // Your extraction logic here...
-        $content = $this->build_wiki_html($wiki);
-
-        if (empty($content)) {
-            return null;
-        }
-
         return [
-            'content'      => $content,
+            'content' => '<p>Extracted content</p>',
             'content_type' => 'text/html',
-            'title'        => $wiki->name,
+            'title' => $cm->name,
         ];
     }
 }
 ```
 
-The `extract()` method must return an associative array with three keys (`content`, `content_type`, `title`) or `null` if the module has no extractable content. Only content types listed in `ingestion_manager::ALLOWED_CONTENT_TYPES` will be accepted.
+Guidelines:
 
-## Manual Reindex
+- return `null` when there is no useful content
+- use only allowed content types
+- escape user/editor content before building HTML
+- avoid indexing personal submissions unless explicitly intended and reviewed
+- use `multi_document_extractor` for files or repeated subdocuments
+- let central post-processing handle H5P placeholders in HTML
 
-Navigate to **Site Administration → Plugins → Local plugins → Reindex course content** and enter a course ID. The page will:
+## Local Development
 
-1. Iterate all visible, non-deleted course modules
-2. Attempt to extract and upsert each one
-3. Display a results table with **success**, **skipped**, and **error** badges per module
+### Deploy to the local eledia.ai Moodle
 
-This operation runs synchronously (not via the task queue) and requires the `local/ragingest:reindex` capability (granted to managers by default).
+The companion Docker setup in the eledia.ai project provides a local Moodle at:
 
-## Debug Server
+```text
+http://localhost:8080
+```
 
-A zero-dependency Python 3 mock server is included for local development:
+Typical flow:
 
 ```bash
-# Start with defaults (port 8001, 200 OK responses)
+cd /Users/moskaliuk/Documents/Code/eledia.ai
+./scripts/local-deploy.sh deploy
+```
+
+If the plugin checkout is not baked into that image, copy or sync this plugin to:
+
+```text
+/var/www/html/public/local/ragingest
+```
+
+and run Moodle upgrade/purge caches.
+
+### Debug Server
+
+A small Python mock server is included for local API testing:
+
+```bash
 python3 local/ragingest/debug_server.py
-
-# Custom port
 python3 local/ragingest/debug_server.py --port 9000
-
-# Simulate server errors (500) to test retry logic
 python3 local/ragingest/debug_server.py --fail
-
-# Add response delay to test timeout handling
 python3 local/ragingest/debug_server.py --delay 5
 ```
 
-The server logs every request with colorized output: headers, decoded payload (base64 content preview), timing, and response status. Configure the Moodle plugin to point at `http://localhost:8001/documents/upsert`.
+`debug_server.py` is excluded from release archives through `.gitattributes`.
 
-## Testing
+## Testing and Code Style
 
 ### PHPUnit
 
-The plugin includes a comprehensive test suite covering all core classes, H5P helpers, and all extractors.
+The local Docker setup can initialise Moodle PHPUnit and run this plugin's
+testsuite:
 
 ```bash
-# Run all plugin tests
-vendor/bin/phpunit --testsuite local_ragingest_testsuite
-
-# Run a specific test class
-vendor/bin/phpunit public/local/ragingest/tests/source_id_helper_test.php
-vendor/bin/phpunit public/local/ragingest/tests/api_client_test.php
-vendor/bin/phpunit public/local/ragingest/tests/ingestion_manager_test.php
-vendor/bin/phpunit public/local/ragingest/tests/observer_test.php
-
-# Run H5P helper tests
-vendor/bin/phpunit public/local/ragingest/tests/h5p_embed_helper_test.php
-vendor/bin/phpunit public/local/ragingest/tests/h5p_text_extractor_test.php
-
-# Run extractor tests (examples)
-vendor/bin/phpunit public/local/ragingest/tests/extractor_page_test.php
-vendor/bin/phpunit public/local/ragingest/tests/extractor_quiz_test.php
-vendor/bin/phpunit public/local/ragingest/tests/extractor_scorm_test.php
+cd /Users/moskaliuk/Documents/Code/eledia.ai
+./scripts/local-deploy.sh phpunit-init
+./scripts/local-deploy.sh phpunit
+PHPUNIT_TESTSUITE=local_ragingest_testsuite ./scripts/local-deploy.sh phpunit
 ```
 
-> **Note:** You must have a valid `phpunit.xml` configuration with a `config.php` for a test database (see Moodle's PHPUnit documentation). The `local_ragingest_testsuite` must be registered in `phpunit.xml.dist` or your local `phpunit.xml`.
-> 
-> The `extractor_videotime_test` tests are automatically skipped when `mod_videotime` is not installed (the plugin's test generator is required).
+The current local result is:
 
-### Test Coverage
+```text
+Tests: 164
+Assertions: 373
+Failures: 0
+Errors: 0
+Skipped: 5
+PHPUnit Deprecations: 27
+Notices: 1
+```
 
-| Test File | What It Covers |
-|---|---|
-| `source_id_helper_test` | Deterministic ID format, tenant config fallback to `default`, `build()` from `\cm_info` |
-| `api_client_test` | `is_configured()` with all config permutations, mocked upsert/delete responses |
-| `ingestion_manager_test` | Unconfigured client error, page ingestion end-to-end, unsupported module skipping, delete success, size limit enforcement |
-| `observer_test` | Verifies that create/update/delete events queue the correct ad-hoc task types |
-| `h5p_embed_helper_test` | Placeholder detection, resolution via file storage + H5P table, unresolvable/empty/non-H5P URL stripping |
-| `h5p_text_extractor_test` | Flat and nested JSON, blocklist filtering, deduplication, HTML stripping, accordion panels, semantic labelling (multichoice/true-false/drag-text/summary/cards), `action`-nested interactive content, the blocks API |
-| `extractor_page_test` | `supports()` filtering, content extraction, empty page → null |
-| `extractor_label_test` | `supports()` filtering, intro extraction, empty label → null |
-| `extractor_resource_test` | File storage integration, MIME type filtering (text/plain, text/html, image/png → null) |
-| `extractor_glossary_test` | Multi-entry `<dl>` HTML generation, empty glossary → null, unapproved entries excluded |
-| `extractor_book_test` | Chapter/subchapter hierarchy (`<h2>`/`<h3>`), hidden chapters excluded, empty book → null |
-| `extractor_h5pactivity_test` | Deployed H5P content extraction, undeployed → null, empty JSON → null |
-| `extractor_videotime_test` | VTT parsing (timestamps, formatting tags, voice tags, NOTE/STYLE blocks), multi-track concatenation |
-| `extractor_data_test` | Text-field extraction with field labels, unapproved record exclusion, empty database → null |
-| `extractor_feedback_test` | Multichoice option parsing, pagebreak/captcha skip, label items, empty feedback → null |
-| `extractor_folder_test` | Single file native MIME, multi-file HTML wrapping, unsupported MIME skip, empty folder → null |
-| `extractor_imscp_test` | Manifest structure parsing, nested subitems, HTML body extraction, empty package → null |
-| `extractor_scorm_test` | SCO titles, HTML launch page extraction, intro-only fallback, local vs external packages |
+For a direct Moodle checkout with an already initialised PHPUnit environment:
+
+```bash
+vendor/bin/phpunit --testsuite local_ragingest_testsuite
+```
+
+### PHP Syntax
+
+```bash
+find public/local/ragingest -name '*.php' -print0 | xargs -0 -n1 php -l
+```
+
+### Moodle Coding Style
+
+Install `moodlehq/moodle-cs` outside the plugin checkout and run PHPCS:
+
+```bash
+rm -rf /tmp/local-ragingest-moodle-cs
+mkdir -p /tmp/local-ragingest-moodle-cs
+cd /tmp/local-ragingest-moodle-cs
+composer init --no-interaction --name=local-ragingest/moodle-cs-tools
+composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
+composer require --dev moodlehq/moodle-cs
+
+cd /Users/moskaliuk/Documents/Code/local_ragingest
+/tmp/local-ragingest-moodle-cs/vendor/bin/phpcs \
+    --standard=moodle \
+    --extensions=php \
+    '--ignore=public/local/ragingest/tests/fixtures/*' \
+    public/local/ragingest
+```
+
+Auto-fix style-only issues with:
+
+```bash
+/tmp/local-ragingest-moodle-cs/vendor/bin/phpcbf \
+    --standard=moodle \
+    --extensions=php \
+    '--ignore=public/local/ragingest/tests/fixtures/*' \
+    public/local/ragingest
+```
+
+The current branch passes `phpcs --standard=moodle`.
+
+### Frontend Checks
+
+Moodle's Grunt tooling runs from a Moodle checkout with Node `>=22.11 <23`.
+From the plugin directory inside that checkout:
+
+```bash
+npx grunt amd --no-color
+npx grunt rawcss --no-color
+```
+
+`amd` runs `ignorefiles`, `eslint:amd`, and `rollup`; it also regenerates
+`amd/build/*.min.js`. `rawcss` runs Stylelint for plain CSS files.
+
+This plugin currently has no Mustache templates and no bundled third-party
+libraries, so the Mustache and third-party-library checks are not applicable.
+If templates or bundled libraries are added later, include the corresponding
+Moodle precheck before submission.
+
+## DevFlow
+
+The working DevFlow lives in:
+
+```text
+docs/00-master.md
+docs/01-features.md
+docs/02-user-doc.md
+docs/03-dev-doc.md
+docs/04-tasks.md
+docs/05-quality.md
+```
+
+Start with `docs/00-master.md`, then check open items in `docs/04-tasks.md`.
+Update DevFlow when behaviour, user-facing UX, implementation details, or test
+evidence changes.
+
+## Privacy
+
+The plugin sends extracted course content and module metadata to an external RAG
+service. The privacy provider declares this external location, including:
+
+- site URL
+- course ID
+- course module ID
+- extracted content
+
+The plugin does not maintain per-user content records of its own. Extractors are
+responsible for avoiding personal learner submissions unless a future feature
+explicitly introduces and documents that behaviour.
 
 ## Capabilities
 
-| Capability | Type | Context | Default Archetypes |
-|---|---|---|---|
-| `local/ragingest:reindex` | write | CONTEXT_SYSTEM | manager |
+| Capability | Purpose |
+|---|---|
+| `local/ragingest:reindex` | Allows access to manual reindex operations |
+
+Managers receive this capability by default.
 
 ## License
 
-GNU GPL v3 or later — see [COPYING.txt](../../COPYING.txt).
+GNU GPL v3 or later.
 
 ## Author
 
-Christopher Reimann, [eLeDia GmbH](https://www.eledia.de) — `christopher.reimann@eledia.de`
+Christopher Reimann, eLeDia GmbH.
