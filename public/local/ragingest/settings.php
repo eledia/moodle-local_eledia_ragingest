@@ -94,6 +94,10 @@ if ($hassiteconfig) {
         );
 
         if (shell::is_available()) {
+            $PAGE->add_body_class('path-local-ragingest');
+            $PAGE->add_body_class('rg-admin-settings-shell-page');
+            $PAGE->add_body_class('rg-admin-settings-pending');
+
             $headerhtml = $OUTPUT->render_from_template(
                 'local_lernhive/plugin_shell_header',
                 shell::context(shell::ACTIVE_SETTINGS)

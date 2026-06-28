@@ -24,6 +24,16 @@
     max-width: var(--lh-page-max-default, 72rem);
 }
 
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-pending #adminsettings {
+    min-height: 24rem;
+    opacity: 0;
+}
+
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-ready #adminsettings {
+    opacity: 1;
+    transition: opacity 0.08s ease;
+}
+
 .rg-admin-settings-shell #adminsettings {
     background: transparent;
     border: 0;

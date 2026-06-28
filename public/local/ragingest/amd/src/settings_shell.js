@@ -91,6 +91,8 @@ define([], function() {
         }
         form.dataset.rgShellWrapped = '1';
         document.body.classList.add('path-local-ragingest', 'rg-admin-settings-shell-page');
+        document.body.classList.remove('rg-admin-settings-pending');
+        document.body.classList.add('rg-admin-settings-ready');
 
         const shell = document.createElement('div');
         shell.className = 'lh-plugin-shell rg-admin-settings-shell';
