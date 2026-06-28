@@ -31,6 +31,16 @@ use moodle_url;
  * Builds the shared LernHive Plugin Shell context for eLeDia.ai RagIngest.
  */
 final class shell {
+    /**
+     * Optional eLeDia.ai Tutor shell classes, newest component name first.
+     *
+     * @var string[]
+     */
+    private const TUTOR_SHELL_CLASSES = [
+        '\\block_eledia_aitutor\\output\\shell',
+        '\\block_elediaaitutor\\output\\shell',
+    ];
+
     /** @var string Settings section key. */
     public const ACTIVE_SETTINGS = 'settings';
 
@@ -56,6 +66,11 @@ final class shell {
         global $PAGE;
 
         $PAGE->requires->css('/local/ragingest/styles.css');
+        if (class_exists('\\block_eledia_aitutor\\output\\shell')) {
+            $PAGE->requires->css('/blocks/eledia_aitutor/styles.css');
+        } else if (class_exists('\\block_elediaaitutor\\output\\shell')) {
+            $PAGE->requires->css('/blocks/elediaaitutor/styles.css');
+        }
         if (self::is_available()) {
             $PAGE->requires->css('/local/lernhive/styles.css');
         }
@@ -94,11 +109,9 @@ final class shell {
      * @return string Raw HTML for the Plugin Shell section navigation slot.
      */
     public static function sectionnav(string $active): string {
-        if (
-            class_exists('\block_elediaaitutor\output\shell')
-                && method_exists('\block_elediaaitutor\output\shell', 'sectionnav')
-        ) {
-            return \block_elediaaitutor\output\shell::sectionnav('ragingest');
+        $tutorshell = self::tutor_shell_class();
+        if ($tutorshell !== null) {
+            return $tutorshell::sectionnav('ragingest');
         }
 
         $items = [
@@ -140,5 +153,20 @@ final class shell {
             'class' => 'lh-plugin-section-nav',
             'aria-label' => get_string('nav_label', 'local_ragingest'),
         ]);
+    }
+
+    /**
+     * Resolve the optional eLeDia.ai Tutor shell class.
+     *
+     * @return class-string|null
+     */
+    private static function tutor_shell_class(): ?string {
+        foreach (self::TUTOR_SHELL_CLASSES as $class) {
+            if (class_exists($class) && method_exists($class, 'sectionnav')) {
+                return $class;
+            }
+        }
+
+        return null;
     }
 }
