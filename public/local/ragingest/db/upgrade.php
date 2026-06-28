@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Upgrade steps for the RAG ingestion plugin.
+ * Upgrade steps for the eLeDia.ai RagIngest plugin.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
@@ -66,13 +66,19 @@ function xmldb_local_ragingest_upgrade(int $oldversion): bool {
     }
 
     if ($oldversion < 2026061303) {
-        // Code-only release: privacy metadata and RAG-Ingest UX refinements.
+        // Code-only release: privacy metadata and eLeDia.ai RagIngest UX refinements.
         upgrade_plugin_savepoint(true, 2026061303, 'local', 'ragingest');
     }
 
     if ($oldversion < 2026062700) {
         // Code-only release: submission documentation, AMD build and coding-style cleanup.
         upgrade_plugin_savepoint(true, 2026062700, 'local', 'ragingest');
+    }
+
+    if ($oldversion < 2026062800) {
+        // Code-only release: visible plugin naming updated to eLeDia.ai RagIngest.
+        \local_ragingest\setup::ensure_course_field();
+        upgrade_plugin_savepoint(true, 2026062800, 'local', 'ragingest');
     }
 
     return true;

@@ -28,7 +28,7 @@ use core_customfield\field_controller;
  */
 class setup {
     /**
-     * Create the per-course "RAG ingestion" override custom field, if absent.
+     * Create or update the per-course eLeDia.ai RagIngest override field.
      *
      * Idempotent: safe to call from both install and upgrade. The field is a
      * three-option select (Default / Include / Exclude) read by
@@ -40,8 +40,9 @@ class setup {
     public static function ensure_course_field(): void {
         global $DB;
 
-        // Already present? Nothing to do.
-        if ($DB->record_exists('customfield_field', ['shortname' => course_gate::FIELD])) {
+        $fieldid = $DB->get_field('customfield_field', 'id', ['shortname' => course_gate::FIELD]);
+        if ($fieldid) {
+            self::update_course_field_labels((int) $fieldid);
             return;
         }
 
@@ -83,6 +84,36 @@ class setup {
         ];
 
         $handler->save_field_configuration($field, $record);
+    }
+
+    /**
+     * Update display labels for an existing course override field.
+     *
+     * @param int $fieldid Custom field ID.
+     * @return void
+     */
+    private static function update_course_field_labels(int $fieldid): void {
+        $field = field_controller::create($fieldid);
+        $name = get_string('cffieldname', 'local_ragingest');
+        $description = get_string('cffielddesc', 'local_ragingest');
+
+        if ($field->get('name') === $name && $field->get('description') === $description) {
+            return;
+        }
+
+        $rawconfig = $field->get('configdata');
+        $configdata = is_array($rawconfig) ? $rawconfig : (json_decode((string) $rawconfig, true) ?: []);
+
+        $record = (object) [
+            'name' => $name,
+            'shortname' => $field->get('shortname'),
+            'type' => $field->get('type'),
+            'description' => $description,
+            'descriptionformat' => FORMAT_HTML,
+            'configdata' => $configdata,
+        ];
+
+        $field->get_handler()->save_field_configuration($field, $record);
     }
 
     /**

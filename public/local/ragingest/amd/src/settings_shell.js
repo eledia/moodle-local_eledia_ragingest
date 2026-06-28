@@ -1,7 +1,7 @@
 // This file is part of Moodle - http://moodle.org/
 
 /**
- * Wrap the RAG Ingest Moodle admin settings form in the LernHive Plugin Shell.
+ * Wrap the eLeDia.ai RagIngest Moodle admin settings form in the LernHive Plugin Shell.
  *
  * @module     local_ragingest/settings_shell
  * @copyright  2026 Christopher Reimann, eLeDia GmbH

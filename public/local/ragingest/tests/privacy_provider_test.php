@@ -31,7 +31,7 @@ use local_ragingest\privacy\provider;
  */
 final class privacy_provider_test extends \core_privacy\tests\provider_testcase {
     /**
-     * Metadata declares the external RAG ingestion service.
+     * Metadata declares the external eLeDia.ai RagIngest service.
      */
     public function test_get_metadata(): void {
         $collection = provider::get_metadata(new collection('local_ragingest'));

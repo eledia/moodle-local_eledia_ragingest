@@ -24,7 +24,7 @@ use local_ragingest\content_extractor;
  * Extracts video transcript text from the VTT text-track files attached
  * to a Video Time activity. The raw VTT content is parsed to strip
  * headers and timestamps, producing plain-text transcript content
- * suitable for RAG ingestion.
+ * suitable for eLeDia.ai RagIngest.
  *
  * Reads directly from Moodle file storage (component 'mod_videotime',
  * filearea 'texttrack') via the {@see videotime_track} metadata table,

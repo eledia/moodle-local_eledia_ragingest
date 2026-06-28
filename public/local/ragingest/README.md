@@ -1,4 +1,4 @@
-# local_ragingest - RAG Content Ingestion for Moodle
+# local_ragingest - eLeDia.ai RagIngest for Moodle
 
 English | [Deutsch](README.de.md)
 
@@ -91,7 +91,7 @@ All settings live on one page:
 ```
 
 When the eLeDia.ai Tutor shell is present, this page appears in the shared
-navigation with the active menu item **RAG-Ingest**. The plugin no longer splits
+navigation with the active menu item **eLeDia.ai RagIngest**. The plugin no longer splits
 setup across several Moodle admin menus.
 
 ### Connection
@@ -126,7 +126,7 @@ targets.
 | Pilot courses | Searchable multi-select of specific courses. Intended for controlled pilots. |
 | Lock course marking | Makes the course custom field inert/read-only so only central settings decide. |
 
-The course custom field **RAG ingestion** is created on install. When course
+The course custom field **eLeDia.ai RagIngest** is created on install. When course
 marking is not locked, it supports:
 
 - `Default`: central pilot/category rules decide.

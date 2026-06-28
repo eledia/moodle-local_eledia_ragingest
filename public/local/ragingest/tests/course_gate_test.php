@@ -200,7 +200,7 @@ final class course_gate_test extends \advanced_testcase {
         $form->addElement(
             'select',
             'customfield_' . course_gate::FIELD,
-            'RAG ingestion',
+            'eLeDia.ai RagIngest',
             [1 => 'Default', 2 => 'Include', 3 => 'Exclude']
         );
         $form->addElement('text', 'fullname', 'Course name');

@@ -1,4 +1,4 @@
-# RAG Ingestion API Specification
+# eLeDia.ai RagIngest API Specification
 
 > **Version:** 1.2  
 > **Date:** June 2026  

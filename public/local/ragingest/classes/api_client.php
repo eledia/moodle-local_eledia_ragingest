@@ -17,7 +17,7 @@
 namespace local_ragingest;
 
 /**
- * HTTP client for communicating with the RAG ingestion API.
+ * HTTP client for communicating with the eLeDia.ai RagIngest API.
  *
  * Handles upsert and delete requests with retry logic and error handling.
  * The API key is only used server-side and never exposed to clients.
@@ -66,7 +66,7 @@ class api_client {
     }
 
     /**
-     * Check whether the configured RAG ingestion service is reachable.
+     * Check whether the configured eLeDia.ai RagIngest service is reachable.
      *
      * The health URL is derived from the configured upsert endpoint. For the
      * standard endpoint `.../documents/upsert` this calls `.../health`.

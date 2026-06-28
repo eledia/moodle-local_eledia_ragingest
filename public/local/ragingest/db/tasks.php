@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Scheduled task definitions for the RAG ingestion plugin.
+ * Scheduled task definitions for the eLeDia.ai RagIngest plugin.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>

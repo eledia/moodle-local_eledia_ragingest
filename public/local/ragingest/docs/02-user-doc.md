@@ -13,14 +13,14 @@ Das Plugin arbeitet im Hintergrund. Lehrende muessen fuer normale Kursaenderunge
 ## Zielgruppen
 
 - **Site-Admins:** installieren und konfigurieren das Plugin.
-- **Manager / berechtigte Rollen:** koennen Kurse fuer RAG-Ingestion markieren, sofern die Markierung nicht gesperrt ist.
+- **Manager / berechtigte Rollen:** koennen Kurse fuer eLeDia.ai RagIngest markieren, sofern die Markierung nicht gesperrt ist.
 - **Lehrende:** aendern Kursinhalte wie gewohnt; die Ingestion reagiert im Hintergrund, wenn der Kurs markiert ist.
 
 ## Installation
 
 1. Plugin-Code nach `local/ragingest` kopieren.
 2. Moodle-Upgrade ausfuehren, z. B. ueber Website-Administration oder CLI.
-3. Einstellungen unter **Website-Administration > Plugins > Lokale Plugins > RAG Content Ingestion** pruefen.
+3. Einstellungen unter **Website-Administration > Plugins > Lokale Plugins > eLeDia.ai RagIngest** pruefen.
 
 ## Grundkonfiguration
 
@@ -54,7 +54,7 @@ damit Cron-Worker nicht lange blockieren.
 
 ## Settings- und Statusseite
 
-Die RAG-Ingest-Settings sind in die eLeDia.ai-Tutor-Navigation eingebunden und
+Die eLeDia.ai RagIngest-Settings sind in die eLeDia.ai-Tutor-Navigation eingebunden und
 liegen auf einer einzelnen Seite:
 
 ```text
@@ -82,9 +82,9 @@ Admins koennen einzelne Kurse zentral als Pilotkurse auswaehlen. Das Feld ist ei
 
 ### Kategorie-Allowlist
 
-Admins koennen Kurskategorien ueber eine Mehrfachauswahl mit Suche aktivieren. Ausgewaehlte Kategorien erscheinen als Chips. Kurse in diesen Kategorien und deren Unterkategorien sind dann fuer RAG-Ingestion vorgesehen.
+Admins koennen Kurskategorien ueber eine Mehrfachauswahl mit Suche aktivieren. Ausgewaehlte Kategorien erscheinen als Chips. Kurse in diesen Kategorien und deren Unterkategorien sind dann fuer eLeDia.ai RagIngest vorgesehen.
 
-### Kursfeld "RAG ingestion"
+### Kursfeld "eLeDia.ai RagIngest"
 
 Wenn die Kursmarkierung nicht gesperrt ist, kann ein Kurs ueber das Custom Field gesteuert werden:
 

@@ -24,7 +24,7 @@ use core_privacy\local\metadata\collection;
  * Privacy provider for local_ragingest.
  *
  * The plugin does not store user-scoped data itself. It does send course
- * content and course/module metadata to the configured external RAG ingestion
+ * content and course/module metadata to the configured external eLeDia.ai RagIngest
  * service, which is declared here for Moodle's privacy subsystem.
  *
  * @package    local_ragingest

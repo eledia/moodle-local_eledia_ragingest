@@ -2,7 +2,7 @@
 
 ## Produktuebersicht
 
-`local_ragingest` verbindet Moodle-Kursinhalte mit einem externen RAG-Ingestion-Service. Das Plugin extrahiert Inhalte aus Kursaktivitaeten, baut stabile Dokument-IDs und sendet Dokumente per HTTP an `/documents/upsert`. Bei geloeschten oder nicht mehr markierten Kursen werden Dokumente per `/documents/delete` wieder entfernt.
+`local_ragingest` verbindet Moodle-Kursinhalte mit einem externen eLeDia.ai RagIngest-Service. Das Plugin extrahiert Inhalte aus Kursaktivitaeten, baut stabile Dokument-IDs und sendet Dokumente per HTTP an `/documents/upsert`. Bei geloeschten oder nicht mehr markierten Kursen werden Dokumente per `/documents/delete` wieder entfernt.
 
 ## Kernkonzepte
 
@@ -13,7 +13,7 @@
 - **Multi-Dokument-Module:** Ein Modul kann mehrere Dokumente liefern, z. B. ein Ordner mit mehreren Dateien.
 - **Tenant aus Site-URL:** Die Tenant-ID wird aus Moodle `wwwroot` abgeleitet.
 
-## feat01 Automatische RAG-Ingestion fuer Kursmodule
+## feat01 Automatische eLeDia.ai RagIngest-Indexierung fuer Kursmodule
 
 **Status:** implemented  
 **Prioritaet:** P0
@@ -81,7 +81,7 @@ Admins sollen kontrollieren, welche Kurse in den RAG-Index gelangen, mit sichere
 - Kategorie-Allowlist ist ebenfalls eine durchsuchbare Mehrfachauswahl und aktiviert Kurse in der Kategorie und ihren Unterkategorien.
 - Das Kurs-Custom-Field `ragingest` erlaubt `Default`, `Include` und `Exclude`.
 - Die Einstellung `lockcoursemarking` ignoriert das Kursfeld vollstaendig und entfernt es aus dem Kursformular.
-- Wenn sich RAG-Ingest-Settings aendern, wird `queue_divergent_reconciles()` angestossen.
+- Wenn sich eLeDia.ai RagIngest-Settings aendern, wird `queue_divergent_reconciles()` angestossen.
 
 ### Akzeptanzkriterien
 
@@ -90,7 +90,7 @@ Admins sollen kontrollieren, welche Kurse in den RAG-Index gelangen, mit sichere
 - **feat03.AC03:** Given das Kursfeld steht auf `Exclude`, then wird der Kurs nicht indexiert, solange der Lock deaktiviert ist.
 - **feat03.AC04:** Given `lockcoursemarking` ist aktiv, then entscheidet nur die zentrale Pilot-/Kategorie-Konfiguration.
 - **feat03.AC05:** Given ein Admin bearbeitet die Plugin-Settings, when Pilotkurse oder Kurskategorien gewaehlt werden, then kann er mehrere Eintraege ueber ein Suchfeld finden und als Chips uebernehmen.
-- **feat03.AC06:** Given RAG-Ingest-Konfiguration wird gespeichert, then werden divergente Kurse fuer Reconciliation eingeplant.
+- **feat03.AC06:** Given eLeDia.ai RagIngest-Konfiguration wird gespeichert, then werden divergente Kurse fuer Reconciliation eingeplant.
 
 ## feat04 Breite Aktivitaetsunterstuetzung durch Extractors
 
@@ -142,16 +142,16 @@ Der externe RAG-Service soll einen klaren, stabilen HTTP-Vertrag bekommen, damit
 - **feat05.AC01:** Given eine konfigurierte API, when ein Dokument gesendet wird, then entspricht der Payload der `API_SPECIFICATION.md`.
 - **feat05.AC02:** Given ein Multi-Dokument-Modul wird geloescht, when der Delete-Call erfolgt, then kann der Service alle Subdokumente ueber Prefix entfernen.
 - **feat05.AC03:** Given API-Key fehlt, then fuehrt das Plugin keine Ingestion aus und meldet die API als nicht konfiguriert.
-- **feat05.AC04:** Given ein LiteRAG-Ingest-Endpoint ist ohne Action konfiguriert, when Health/Upsert/Delete ausgefuehrt wird, then nutzt der Client die passende `action`-Route.
+- **feat05.AC04:** Given ein LiteeLeDia.ai RagIngest-Endpoint ist ohne Action konfiguriert, when Health/Upsert/Delete ausgefuehrt wird, then nutzt der Client die passende `action`-Route.
 
-## feat06 RAG-Ingest Admin-Shell und Reindex-UX
+## feat06 eLeDia.ai RagIngest Admin-Shell und Reindex-UX
 
 **Status:** implemented  
 **Prioritaet:** P1
 
 ### Ziel
 
-RAG-Ingest soll in der eLeDia.ai-Tutor-Navigation als eine konsistente Admin-Oberflaeche erscheinen. Admins sollen sofort sehen, ob freigegebene Kurse noch auf Indexierung warten.
+eLeDia.ai RagIngest soll in der eLeDia.ai-Tutor-Navigation als eine konsistente Admin-Oberflaeche erscheinen. Admins sollen sofort sehen, ob freigegebene Kurse noch auf Indexierung warten.
 
 ### Verhalten
 
@@ -160,11 +160,11 @@ RAG-Ingest soll in der eLeDia.ai-Tutor-Navigation als eine konsistente Admin-Obe
 - Abschnittsueberschriften stehen ausserhalb der Karten, Settings liegen in ruhigen Karten.
 - Oben in den Settings wird der Indexierungsstatus angezeigt.
 - Die Reindex-Seite nutzt dieselbe Shell-Optik und trennt Sammelindexierung von manueller Kurs-ID-Reindexierung.
-- Das eLeDia.ai-Tutor-Dashboard/Wizard zeigt RAG-Ingest mit Health- und Indexstatus.
+- Das eLeDia.ai-Tutor-Dashboard/Wizard zeigt eLeDia.ai RagIngest mit Health- und Indexstatus.
 
 ### Akzeptanzkriterien
 
-- **feat06.AC01:** Given ein Admin oeffnet die RAG-Ingest-Settings, then sieht er die eLeDia.ai-Tutor-Navigation mit aktivem RAG-Ingest-Menuepunkt.
+- **feat06.AC01:** Given ein Admin oeffnet die eLeDia.ai RagIngest-Settings, then sieht er die eLeDia.ai-Tutor-Navigation mit aktivem eLeDia.ai RagIngest-Menuepunkt.
 - **feat06.AC02:** Given freigegebene Kurse warten auf Indexierung, then erscheint eine prominente Aktion "Freigegebene Kurse jetzt indexieren".
 - **feat06.AC03:** Given keine Kurse warten, then erscheint ein kompakter Gruenstatus mit Link zur Reindex-Seite.
 - **feat06.AC04:** Given ein Admin oeffnet die Reindex-Seite, then wird keine rohe Moodle-Standard-Alert/Form-UI angezeigt, sondern eine Shell-kompatible Karte.

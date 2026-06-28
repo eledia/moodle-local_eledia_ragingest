@@ -1,14 +1,14 @@
-# RAG Ingest - Master
+# eLeDia.ai RagIngest - Master
 
 ## 1. Projekt-Meta
 
-- **Name:** RAG Content Ingestion
+- **Name:** eLeDia.ai RagIngest
 - **Moodle-Komponente:** `local_ragingest`
 - **Repository:** `https://gitlab.eledia.de/eledia_plugins/local/rangingest`
 - **DevFlow-Quelle:** `https://github.com/jmoskaliuk/eLeDia.OS_DevFlow`
 - **Plugin-Typ:** Moodle local plugin, installiert unter `local/ragingest`
 - **Primäres Zielsystem:** Moodle 4.5 bis 5.1 laut Plugin-Metadaten; aktuell lokal auch in Moodle 5.2.1 installiert
-- **Ziel:** Moodle-Kursinhalte kontrolliert extrahieren und an einen externen RAG-Ingestion-Service uebergeben, damit Lerninhalte fuer Retrieval-Augmented Generation nutzbar werden.
+- **Ziel:** Moodle-Kursinhalte kontrolliert extrahieren und an einen externen eLeDia.ai RagIngest-Service uebergeben, damit Lerninhalte fuer Retrieval-Augmented Generation nutzbar werden.
 
 ## 2. Leitentscheidungen
 
@@ -25,7 +25,7 @@
 
 - **Datum:** 2026-06-25
 - **Status:** beschlossen
-- **Kontext:** RAG-Ingestion uebertraegt Kursinhalte an ein externes System. Das darf nicht unbeabsichtigt fuer alle Kurse passieren.
+- **Kontext:** eLeDia.ai RagIngest uebertraegt Kursinhalte an ein externes System. Das darf nicht unbeabsichtigt fuer alle Kurse passieren.
 - **Optionen:** globale Aktivierung | Kategorie-Allowlist | Pilotkursliste | Kursfeld-Override
 - **Entscheidung:** Ingestion ist opt-in. Pilotkursliste, Kategorie-Allowlist und Kursfeld entscheiden zusammen; ein Lock kann Kursfeld-Markierungen in Testphasen deaktivieren.
 - **Konsequenzen:** Unmarking muss nicht nur zukuenftige Ingestion stoppen, sondern vorhandene Dokumente purgen. Deshalb gibt es `course_state` und Reconcile-Tasks.
@@ -39,14 +39,14 @@
 - **Entscheidung:** `tenant::id()` leitet die Tenant-ID aus `CFG->wwwroot` ab; `site_url` wird zusaetzlich in den Metadaten gesendet.
 - **Konsequenzen:** Eine geaenderte Moodle-URL ist eine Tenant-Migration. Der RAG-Service muss API-Key und Site/Tenant pruefen.
 
-### adr04 RAG-Ingest lebt in der eLeDia.ai-Tutor-Shell
+### adr04 eLeDia.ai RagIngest lebt in der eLeDia.ai-Tutor-Shell
 
 - **Datum:** 2026-06-26
 - **Status:** beschlossen
-- **Kontext:** RAG-Ingest ist fachlich Teil der eLeDia.ai Tutor/LiteRAG-Kette. Getrennte Moodle-Admin-Menues fuehren zu einer zersplitterten Einrichtung.
+- **Kontext:** eLeDia.ai RagIngest ist fachlich Teil der eLeDia.ai Tutor/LiteRAG-Kette. Getrennte Moodle-Admin-Menues fuehren zu einer zersplitterten Einrichtung.
 - **Optionen:** separate Local-Plugin-Adminseiten | eingebettete eLeDia.ai-Tutor-Navigation | eigene Landing-/Hub-Seite
 - **Entscheidung:** Settings, Reindex und DevFlow nutzen die gemeinsame Plugin-Shell und die eLeDia.ai-Tutor-Navigation; die Settings bleiben eine einzelne Adminseite.
-- **Konsequenzen:** RAG-Ingest-UX muss mit den Tutor-/LiteRAG-Seiten konsistent bleiben. Status- und Reindex-Aktionen werden prominent in der Settings-Seite und im Dashboard/Wizard angezeigt.
+- **Konsequenzen:** eLeDia.ai RagIngest-UX muss mit den Tutor-/LiteRAG-Seiten konsistent bleiben. Status- und Reindex-Aktionen werden prominent in der Settings-Seite und im Dashboard/Wizard angezeigt.
 
 ### adr05 Indexzustand wird defensiv und wiederholbar gefuehrt
 

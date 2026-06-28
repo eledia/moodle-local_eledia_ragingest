@@ -1,10 +1,10 @@
-# local_ragingest - RAG Content Ingestion fuer Moodle
+# local_ragingest - eLeDia.ai RagIngest fuer Moodle
 
 [English](README.md) | Deutsch
 
 `local_ragingest` ist ein Moodle-Local-Plugin, das ausgewaehlte Kursinhalte
 extrahiert und an einen externen Retrieval-Augmented-Generation- oder
-RAG-Ingestion-Service sendet. Das Plugin ist bewusst als Opt-in gebaut: Ein Kurs
+eLeDia.ai RagIngest-Service sendet. Das Plugin ist bewusst als Opt-in gebaut: Ein Kurs
 wird nur indexiert, wenn er ueber die Pilotkursliste, eine Kategorie-Allowlist
 oder ein Kursfeld freigegeben ist.
 
@@ -93,14 +93,14 @@ Alle Einstellungen liegen auf einer Seite:
 ```
 
 Wenn die eLeDia.ai Tutor Shell vorhanden ist, erscheint diese Seite in der
-gemeinsamen Navigation mit aktivem Menuepunkt **RAG-Ingest**. Das Setup ist
+gemeinsamen Navigation mit aktivem Menuepunkt **eLeDia.ai RagIngest**. Das Setup ist
 nicht mehr auf mehrere Moodle-Admin-Menues verteilt.
 
 ### Connection
 
 | Setting | Beschreibung | Default |
 |---|---|---|
-| RAG Endpoint URL | Upsert-Endpunkt oder LiteRAG-Ingest-Route | `http://rag-service:8001/documents/upsert` |
+| RAG Endpoint URL | Upsert-Endpunkt oder LiteeLeDia.ai RagIngest-Route | `http://rag-service:8001/documents/upsert` |
 | API Key | Secret, das als `X-API-Key` gesendet wird | leer |
 | Allow private target | Aktiviert Moodle-cURL `ignoresecurity` fuer lokale/private Ziele | aus |
 
@@ -128,7 +128,7 @@ bewusst aktiviert werden.
 | Pilot courses | Suchbare Mehrfachauswahl konkreter Kurse fuer Pilotphasen. |
 | Lock course marking | Macht das Kursfeld inert/read-only, sodass nur zentrale Settings entscheiden. |
 
-Das Kursfeld **RAG ingestion** wird bei der Installation angelegt. Wenn die
+Das Kursfeld **eLeDia.ai RagIngest** wird bei der Installation angelegt. Wenn die
 Kursmarkierung nicht gesperrt ist, gibt es:
 
 - `Default`: zentrale Pilot-/Kategorie-Regeln entscheiden.

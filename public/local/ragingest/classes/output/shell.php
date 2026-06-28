@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
 
 /**
- * LernHive Plugin Shell adapter for RAG Ingest pages.
+ * LernHive Plugin Shell adapter for eLeDia.ai RagIngest pages.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
@@ -28,7 +28,7 @@ use html_writer;
 use moodle_url;
 
 /**
- * Builds the shared LernHive Plugin Shell context for RAG Ingest.
+ * Builds the shared LernHive Plugin Shell context for eLeDia.ai RagIngest.
  */
 final class shell {
     /** @var string Settings section key. */
@@ -50,7 +50,7 @@ final class shell {
     }
 
     /**
-     * Require styles used by the shell and RAG Ingest admin UI.
+     * Require styles used by the shell and eLeDia.ai RagIngest admin UI.
      */
     public static function require_css(): void {
         global $PAGE;

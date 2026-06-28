@@ -162,7 +162,7 @@ Die Settings `local_ragingest | pilotcourses` und
 - [x] `test04` in `05-quality.md` ergaenzt
 - [ ] PO Sign-off
 
-### task06 RAG-Ingest Status- und Reindex-UX in Shell integrieren
+### task06 eLeDia.ai RagIngest Status- und Reindex-UX in Shell integrieren
 Status: done  
 Feature: feat02 / feat06  
 Prioritaet: P1  
@@ -177,8 +177,8 @@ Kurse noch nicht indexiert sind, und koennen diese gesammelt einplanen.
 - Settings-Seite zeigt oben eine Statuskarte.
 - Bei offenen Kursen erscheint die Aktion **Freigegebene Kurse jetzt indexieren**.
 - Bei `pending = 0` erscheint ein kompakter Gruenstatus mit Link zur Reindex-Seite.
-- Reindex-Seite nutzt die RAG-Ingest/eLeDia.ai-Shell-Optik statt Moodle-Standard-Alert/Form.
-- eLeDia.ai-Tutor-Dashboard/Wizard zeigt RAG-Ingest Health und Indexstatus.
+- Reindex-Seite nutzt die eLeDia.ai RagIngest/eLeDia.ai-Shell-Optik statt Moodle-Standard-Alert/Form.
+- eLeDia.ai-Tutor-Dashboard/Wizard zeigt eLeDia.ai RagIngest Health und Indexstatus.
 - Der Tutor behandelt freigegebene, aber nicht indexierte Kurse nicht als verfuegbare Wissensbasis.
 
 **Done-Checkliste**

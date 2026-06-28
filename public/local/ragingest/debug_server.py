@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-RAG Ingestion Debug Server — mock endpoint for local_ragingest testing.
+eLeDia.ai RagIngest Debug Server — mock endpoint for local_ragingest testing.
 
 Listens on port 8001 (configurable) and logs every incoming request
 in full detail: headers, payload (with base64 content truncated for
@@ -186,7 +186,7 @@ class RAGDebugHandler(BaseHTTPRequestHandler):
 
 def main():
     parser = argparse.ArgumentParser(
-        description="RAG Ingestion Debug Server for local_ragingest testing"
+        description="eLeDia.ai RagIngest Debug Server for local_ragingest testing"
     )
     parser.add_argument(
         "--port", type=int, default=8001,
@@ -225,7 +225,7 @@ def main():
 
     print(f"""
 {C_BOLD}╔══════════════════════════════════════════════════════════════╗
-║           RAG Ingestion Debug Server                         ║
+║           eLeDia.ai RagIngest Debug Server                   ║
 ╚══════════════════════════════════════════════════════════════╝{C_RESET}
 
   {C_CYAN}Listening:{C_RESET}   http://{args.host}:{args.port}
@@ -235,7 +235,7 @@ def main():
   {C_CYAN}Content:{C_RESET}     {'FULL (show all decoded content)' if FULL_CONTENT else f'Preview ({PREVIEW_SIZE} chars)'}
   {C_CYAN}Delay:{C_RESET}       {RESPONSE_DELAY}s
 
-  Configure in Moodle admin → Plugins → Local → RAG Content Ingestion:
+  Configure in Moodle admin → Plugins → Local → eLeDia.ai RagIngest:
     Endpoint URL: http://localhost:{args.port}/documents/upsert
 
   Press Ctrl+C to stop.

@@ -135,13 +135,13 @@ koennen gesucht, ausgewaehlt und als Chips angezeigt werden.
 
 DOM-Pruefung im Browser: Moodle Plugin Shell ist vorhanden, die
 eledia.ai-Tutor-Navigation zeigt `Dashboard`, `Einstellungen`, `Tutoren`,
-`Vorschau`, `LiteRAG`, `RAG-Ingest`, `eLeDia MCP`; `RAG-Ingest` ist aktiv.
+`Vorschau`, `LiteRAG`, `eLeDia.ai RagIngest`, `eLeDia MCP`; `eLeDia.ai RagIngest` ist aktiv.
 Es gibt keine `.rg-settings-hub-card` mehr. Das Pilotkurs-Feld ist als
 Moodle-Autocomplete mit Placeholder `Search courses` vorhanden; das
 Kategoriefeld ist als Moodle-Autocomplete mit Placeholder `Search categories`
 vorhanden.
 
-### test05 RAG-Ingest Settings/Reindex Shell UX
+### test05 eLeDia.ai RagIngest Settings/Reindex Shell UX
 Linked: task06 / feat06  
 Typ: manuell / Browser-DOM  
 Status: passed  
@@ -224,7 +224,7 @@ Letzter Lauf: 2026-06-27
 PHPUnit ist in Moodle CLI-basiert. Browser-basierte Regressionstests waeren ein
 separater Behat/Selenium-Track, nicht PHPUnit.
 
-### test08 Submission-Release-Precheck 0.12.0
+### test08 Submission-Release-Precheck 0.12.1
 Linked: task07
 Typ: automatisiert / CLI
 Status: passed
@@ -232,8 +232,8 @@ Letzter Lauf: 2026-06-27
 
 **Schritte**
 
-1. Plugin-Version auf `2026062700` / Release `0.12.0` / `MATURITY_BETA` setzen.
-2. Upgrade-Savepoint `2026062700` pruefen.
+1. Plugin-Version auf `2026062800` / Release `0.12.1` / `MATURITY_BETA` setzen.
+2. Upgrade-Savepoint `2026062800` pruefen.
 3. PHP-Lint ueber alle Plugin-Dateien ausfuehren.
 4. `phpcs --standard=moodle-extra` ausfuehren.
 5. AMD/CSS-Grunt-Checks im lokalen Moodle-Container ausfuehren.
@@ -242,7 +242,7 @@ Letzter Lauf: 2026-06-27
 
 **Beobachtetes Ergebnis**
 
-- Version und letzter Upgrade-Savepoint: `2026062700`.
+- Version und letzter Upgrade-Savepoint: `2026062800`.
 - PHP-Lint: passed.
 - `phpcs --standard=moodle-extra`: passed, 111 PHP-Dateien.
 - `npx grunt amd --no-color`: passed.
@@ -271,7 +271,7 @@ Die lokale Installation wurde in den laufenden Container kopiert. Wenn der Conta
 
 Viele Kernpfade enden in HTTP-Calls. Unit-Tests decken Payload- und Flow-Logik ab, aber fuer Betriebssicherheit braucht es regelmaessige Tests gegen Debug-Server oder Staging-RAG.
 
-### risk04 RAG-Ingestion uebertraegt Kursinhalte an Drittsystem
+### risk04 eLeDia.ai RagIngest uebertraegt Kursinhalte an Drittsystem
 
 Opt-in und API-Key/Tenant-Pruefung reduzieren Risiko, ersetzen aber keine fachliche Datenschutzentscheidung. Pilotkurse und Kategorie-Allowlist muessen bewusst gepflegt werden.
 

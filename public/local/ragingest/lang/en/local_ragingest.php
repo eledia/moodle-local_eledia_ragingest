@@ -15,40 +15,40 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Language strings for the RAG ingestion plugin.
+ * Language strings for the eLeDia.ai RagIngest plugin.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
 
-$string['pluginname'] = 'RAG Content Ingestion';
+$string['pluginname'] = 'eLeDia.ai RagIngest';
 
 // Settings.
-$string['rag_endpoint_url'] = 'RAG Endpoint URL';
-$string['rag_endpoint_url_desc'] = 'The URL of the RAG ingestion API endpoint (e.g. http://rag-service:8001/documents/upsert).';
+$string['rag_endpoint_url'] = 'eLeDia.ai RagIngest Endpoint URL';
+$string['rag_endpoint_url_desc'] = 'The URL of the eLeDia.ai RagIngest API endpoint (e.g. http://rag-service:8001/documents/upsert).';
 $string['rag_api_key'] = 'API Key';
-$string['rag_api_key_desc'] = 'The API key for authenticating with the RAG ingestion service. Sent as X-API-Key header.';
-$string['allow_private_target'] = 'Allow private RAG target';
-$string['allow_private_target_desc'] = 'Allow the configured RAG endpoint to use private hosts, internal service names or non-standard ports. Enable only when the RAG service runs inside a trusted internal network, such as Docker or Kubernetes.';
+$string['rag_api_key_desc'] = 'The API key for authenticating with eLeDia.ai RagIngest. Sent as X-API-Key header.';
+$string['allow_private_target'] = 'Allow private eLeDia.ai RagIngest target';
+$string['allow_private_target_desc'] = 'Allow the configured eLeDia.ai RagIngest endpoint to use private hosts, internal service names or non-standard ports. Enable only when the service runs inside a trusted internal network, such as Docker or Kubernetes.';
 $string['max_document_size_mb'] = 'Max Document Size (MB)';
 $string['max_document_size_mb_desc'] = 'Maximum allowed document size in megabytes. Documents exceeding this limit will be skipped.';
 $string['request_timeout_seconds'] = 'Request Timeout (seconds)';
 $string['request_timeout_seconds_desc'] = 'HTTP request timeout in seconds for RAG API calls.';
 $string['head_connection'] = 'Connection';
-$string['head_connection_desc'] = 'Endpoint and authentication for the external RAG ingestion service.';
+$string['head_connection_desc'] = 'Endpoint and authentication for eLeDia.ai RagIngest.';
 $string['head_courses'] = 'Course selection';
 $string['head_courses_desc'] = 'Opt-in rules that decide which courses may be sent to the RAG service.';
 $string['head_limits'] = 'Limits';
 $string['head_limits_desc'] = 'Payload size and request runtime limits for ingestion tasks.';
-$string['settings_hub_desc'] = 'Choose one RAG Ingest settings area.';
-$string['settings_section_connection_desc'] = 'RAG endpoint URL and API key.';
+$string['settings_hub_desc'] = 'Choose one eLeDia.ai RagIngest settings area.';
+$string['settings_section_connection_desc'] = 'eLeDia.ai RagIngest endpoint URL and API key.';
 $string['settings_section_courses_desc'] = 'Pilot courses, category allow-list and test-phase lock.';
 $string['settings_section_limits_desc'] = 'Document size and request timeout.';
-$string['shell_tagline'] = 'RAG Ingest';
+$string['shell_tagline'] = 'eLeDia.ai RagIngest';
 $string['shell_subtitle'] = 'Course content ingestion for external retrieval-augmented generation services.';
-$string['shell_help_label'] = 'Help for RAG Ingest';
-$string['nav_label'] = 'RAG Ingest sections';
+$string['shell_help_label'] = 'Help for eLeDia.ai RagIngest';
+$string['nav_label'] = 'eLeDia.ai RagIngest sections';
 $string['nav_settings'] = 'Settings';
 $string['nav_reindex'] = 'Reindex';
 $string['nav_docs'] = 'DevFlow';
@@ -76,7 +76,7 @@ $string['reindexcomplete'] = 'Course reindex complete.';
 $string['ingesting'] = 'Ingesting content for course: {$a}';
 $string['unknownmodule'] = 'Module (cmid {$a})';
 $string['pendingindexingtitle'] = 'Released courses waiting for indexing';
-$string['pendingindexingcount'] = '{$a} course(s) are released for RAG ingestion but not indexed yet.';
+$string['pendingindexingcount'] = '{$a} course(s) are released for eLeDia.ai RagIngest but not indexed yet.';
 $string['indexreleasedcourses'] = 'Index released courses now';
 $string['pendingindexingqueued'] = 'Queued {$a} released course(s) for indexing.';
 $string['indexingreadytitle'] = 'Released courses are indexed';
@@ -97,7 +97,7 @@ $string['nocontent'] = 'No content to ingest.';
 $string['documentsizeexceeded'] = 'Document size ({$a->size} MB) exceeds maximum ({$a->max} MB).';
 $string['unsupportedcontenttype'] = 'Unsupported content type: {$a}';
 $string['apiclienterror'] = 'RAG API error: {$a}';
-$string['apinotconfigured'] = 'RAG ingestion is not configured. Please set the endpoint URL and API key.';
+$string['apinotconfigured'] = 'eLeDia.ai RagIngest is not configured. Please set the endpoint URL and API key.';
 $string['invalidcourseid'] = 'Invalid course ID.';
 $string['coursenotfound'] = 'Course not found.';
 $string['deletemodule'] = 'Deleting module from RAG index: cmid {$a}';
@@ -106,23 +106,23 @@ $string['ingestionfailed'] = 'Ingestion failed: source_id={$a->source_id}, HTTP 
 $string['ingestionmultisummary'] = 'Ingested {$a->sent} document(s), {$a->failed} failed';
 $string['deletionsuccess'] = 'Deleted from index: source_id={$a}';
 $string['deletionfailed'] = 'Deletion failed: source_id={$a->source_id}, HTTP {$a->http_code}';
-$string['taskingestion'] = 'RAG content ingestion';
-$string['taskdeletion'] = 'RAG content deletion';
+$string['taskingestion'] = 'eLeDia.ai RagIngest content indexing';
+$string['taskdeletion'] = 'eLeDia.ai RagIngest content deletion';
 
 // Course marking (opt-in ingestion).
 $string['enabledcategories'] = 'Ingested course categories';
-$string['enabledcategories_desc'] = 'Only courses in the selected categories (or their subcategories) are sent to the RAG service. Ingestion is opt-in: with nothing selected, no course is ingested unless individually marked "Include" via the course\'s "RAG ingestion" setting.';
+$string['enabledcategories_desc'] = 'Only courses in the selected categories (or their subcategories) are sent to the RAG service. Ingestion is opt-in: with nothing selected, no course is ingested unless individually marked "Include" via the course\'s "eLeDia.ai RagIngest" setting.';
 $string['searchcategories'] = 'Search categories';
 $string['cfcategory'] = 'AI tutor';
-$string['cffieldname'] = 'RAG ingestion';
+$string['cffieldname'] = 'eLeDia.ai RagIngest';
 $string['cffielddesc'] = 'Whether this course\'s content is sent to the AI tutor\'s knowledge base. "Default" follows the site\'s category settings; "Include" always sends; "Exclude" never sends.';
 $string['coursenotmarked'] = 'Course is not marked for ingestion.';
-$string['task_reconcile_all'] = 'Reconcile course ingestion marking';
+$string['task_reconcile_all'] = 'Reconcile eLeDia.ai RagIngest course marking';
 $string['pilotcourses'] = 'Pilot courses';
 $string['pilotcourses_desc'] = 'Specific courses to ingest regardless of the category allow-list. Use the search field to select one or more courses for a controlled test/pilot phase.';
 $string['searchcourses'] = 'Search courses';
 $string['lockcoursemarking'] = 'Lock course marking (test phase)';
-$string['lockcoursemarking_desc'] = 'When enabled, the per-course "RAG ingestion" setting has no effect at all — only the pilot-course list and the category allow-list decide what is ingested, and the course field is locked against teacher editing (visible read-only). Use this during a test phase so the set of ingested courses is controlled exclusively in this admin page. Existing per-course values are kept and become effective again when the lock is disabled.';
+$string['lockcoursemarking_desc'] = 'When enabled, the per-course "eLeDia.ai RagIngest" setting has no effect at all — only the pilot-course list and the category allow-list decide what is ingested, and the course field is locked against teacher editing (visible read-only). Use this during a test phase so the set of ingested courses is controlled exclusively in this admin page. Existing per-course values are kept and become effective again when the lock is disabled.';
 
 // Extractor content labels.
 $string['alsoknownas'] = 'Also known as:';
@@ -132,11 +132,11 @@ $string['contenttruncated'] = '[content truncated to fit the size limit]';
 $string['contenttruncatedlog'] = 'Content truncated to the {$a->max} MB limit before sending: cmid {$a->cmid}';
 
 // Capabilities.
-$string['ragingest:reindex'] = 'Reindex course content for RAG ingestion';
+$string['ragingest:reindex'] = 'Reindex course content for eLeDia.ai RagIngest';
 
 // Privacy.
-$string['privacy:metadata'] = 'The RAG Content Ingestion plugin does not store user-scoped personal data in Moodle.';
-$string['privacy:metadata:rag_service'] = 'Course content and module metadata are sent to the configured external RAG ingestion service.';
+$string['privacy:metadata'] = 'The eLeDia.ai RagIngest plugin does not store user-scoped personal data in Moodle.';
+$string['privacy:metadata:rag_service'] = 'Course content and module metadata are sent to the configured eLeDia.ai RagIngest service.';
 $string['privacy:metadata:rag_service:site_url'] = 'The Moodle site URL is sent so the RAG service can verify the tenant.';
 $string['privacy:metadata:rag_service:course_id'] = 'The Moodle course ID is sent to associate content with its course.';
 $string['privacy:metadata:rag_service:cmid'] = 'The Moodle course module ID is sent to identify the activity.';

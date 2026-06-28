@@ -26,7 +26,7 @@ namespace local_ragingest;
 class hook_callbacks {
     /**
      * Course edit form: while course marking is locked (test phase), remove the
-     * "RAG ingestion" field for EVERYONE — including managers and admins, whom
+     * eLeDia.ai RagIngest field for EVERYONE — including managers and admins, whom
      * Moodle's own field locking would still allow to edit. The per-course
      * value is inert during the lock anyway ({@see course_gate::should_ingest()});
      * removing the element keeps the UI honest. Stored values are untouched and

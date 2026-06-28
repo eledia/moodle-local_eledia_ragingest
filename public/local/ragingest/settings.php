@@ -15,7 +15,7 @@
 // along with Moodle.  If not, see <http://www.gnu.org/licenses/>.
 
 /**
- * Admin settings for the RAG ingestion plugin.
+ * Admin settings for the eLeDia.ai RagIngest plugin.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
@@ -170,7 +170,7 @@ if ($hassiteconfig) {
 
     // Course marking — category allow-list (opt-in). A course is ingested when
     // its category (or an ancestor) is selected here, unless overridden on the
-    // course itself via the "RAG ingestion" custom field.
+    // course itself via the eLeDia.ai RagIngest custom field.
     $categoryoptions = [];
     if (during_initial_install() === false) {
         $categoryoptions = \core_course_category::make_categories_list();
@@ -228,7 +228,7 @@ if ($hassiteconfig) {
     $pilotsetting->set_updatedcallback($queuecallback);
     $settings->add($pilotsetting);
 
-    // Lock teacher editing of the per-course "RAG ingestion" override. When on
+    // Lock teacher editing of the per-course eLeDia.ai RagIngest override. When on
     // (test-phase lock-down), only managers/admins can change a course's
     // marking; teachers still see it read-only.
     $locksetting = new admin_setting_configcheckbox(
