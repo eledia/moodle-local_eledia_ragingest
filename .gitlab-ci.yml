@@ -879,7 +879,7 @@ mirror_github_flat:
   image: alpine:3.20
   needs: []
   rules:
-    - if: '$GITHUB_MIRROR_URL && $GITHUB_MIRROR_TOKEN && $CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH'
+    - if: '$GITHUB_MIRROR_URL && $GITHUB_MIRROR_TOKEN && $CI_COMMIT_BRANCH'
       when: manual
     - if: '$GITHUB_MIRROR_URL && $GITHUB_MIRROR_TOKEN && $CI_COMMIT_TAG'
       when: manual
@@ -904,7 +904,17 @@ mirror_github_flat:
     - test ! -d /tmp/plugin-flat/public
     - cd /tmp/github-flat
     - git init
-    - git checkout -b "${GITHUB_MIRROR_BRANCH:-main}"
+    - |
+      if [ -n "$GITHUB_MIRROR_BRANCH" ]; then
+        TARGET_BRANCH="$GITHUB_MIRROR_BRANCH"
+      elif [ -n "$CI_COMMIT_BRANCH" ] && [ "$CI_COMMIT_BRANCH" != "$CI_DEFAULT_BRANCH" ]; then
+        TARGET_BRANCH="$CI_COMMIT_REF_SLUG"
+      else
+        TARGET_BRANCH="main"
+      fi
+      export TARGET_BRANCH
+      echo "Mirroring flat plugin tree to GitHub branch: ${TARGET_BRANCH}"
+    - git checkout -b "$TARGET_BRANCH"
     - cp -a /tmp/plugin-flat/. .
     - git add -A
     - git commit -m "Mirror ${CI_COMMIT_SHA} from GitLab"
@@ -923,7 +933,7 @@ mirror_github_flat:
       esac
       git remote add github "$MIRROR_REMOTE"
       git ls-remote --exit-code github >/dev/null
-      git push --force github HEAD:${GITHUB_MIRROR_BRANCH:-main}
+      git push --force github HEAD:"$TARGET_BRANCH"
       if [ -n "$CI_COMMIT_TAG" ]; then
         git push --force github "$CI_COMMIT_TAG"
       fi
