@@ -253,6 +253,49 @@ Letzter Lauf: 2026-06-27
   `local_customerportal/storage_quota_gb` einen Default-Setting-Debug-Hinweis;
   `local_ragingest` und seine Extractor-Subplugins wurden erfolgreich installiert.
 
+### test09 Finaler Plugin-Check 2026-06-28
+Linked: task01 / task03 / task07
+Typ: automatisiert / CLI
+Status: partially_passed
+Letzter Lauf: 2026-06-28
+
+**Schritte**
+
+1. Git- und Branch-Status pruefen.
+2. DevFlow-Dateien und Testdateien zaehlen.
+3. PHP-Lint ueber alle Plugin-PHP-Dateien ausfuehren.
+4. `phpcs --standard=moodle-extra` ueber das komplette Plugin ausfuehren.
+5. Moodle-PHPUnit-Umgebung initialisieren und `local_ragingest_testsuite`
+   starten.
+6. Behat-Feature-Abdeckung pruefen.
+7. AMD/CSS-Grunt-Checks im lokalen Moodle-Container starten.
+
+**Beobachtetes Ergebnis**
+
+- Branch: `review_johannes`.
+- Untracked lokal: `.submission-draft.md`; absichtlich nicht Teil des Release-
+  Archivs durch `.gitattributes`.
+- DevFlow: sechs Dateien unter `docs/`, insgesamt 1177 Zeilen.
+- PHPUnit-Testdateien: 25 `*_test.php` im Plugin.
+- Behat: keine `.feature`-Dateien und kein `tests/behat/` im Plugin; damit
+  keine Behat-Full-Coverage.
+- PHP-Lint: passed fuer alle Plugin-PHP-Dateien.
+- `phpcs --standard=moodle-extra public/local/ragingest`: passed.
+- PHPUnit-Init: passed; `/var/www/html/phpunit.xml` enthaelt
+  `local_ragingest_testsuite`.
+- PHPUnit-Suite: nicht abgeschlossen, weil im Container parallel bereits
+  `local_literag_testsuite` und `webservice_elediamcp_testsuite` liefen. Moodle
+  meldete fuer den RAGIngest-Lauf `Waiting for other test execution to
+  complete...`.
+- AMD/CSS-Grunt: nicht ausgefuehrt, weil `npx` im Container am 2026-06-28 nicht
+  vorhanden war.
+
+**Bewertung**
+
+Der Code-Precheck ist gruen. Fuer eine finale Einreichungsfreigabe fehlen noch
+ein aktueller, exklusiver PHPUnit-Lauf der RAGIngest-Suite und ein reproduzierbar
+verfuegbarer Frontend-Toolchain-Check fuer AMD/CSS.
+
 ## Bugs
 
 Keine bestaetigten Bugs im DevFlow erfasst.
@@ -275,7 +318,7 @@ Viele Kernpfade enden in HTTP-Calls. Unit-Tests decken Payload- und Flow-Logik a
 
 Opt-in und API-Key/Tenant-Pruefung reduzieren Risiko, ersetzen aber keine fachliche Datenschutzentscheidung. Pilotkurse und Kategorie-Allowlist muessen bewusst gepflegt werden.
 
-### risk05 PHPUnit-Umgebung im lokalen Container ist nicht initialisiert
+### risk05 PHPUnit-Umgebung im lokalen Container ist nicht dauerhaft persistent
 
 Die PHPUnit-Umgebung ist im laufenden lokalen Container `elediaai-moodle-1`
 initialisiert und lauffaehig. Sie ist jedoch container-lokal: Bei einem

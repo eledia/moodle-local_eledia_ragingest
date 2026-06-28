@@ -11,9 +11,12 @@ Linked: feat01 / feat05
 Asked-by: KI  
 Status: open  
 Answer: Noch nicht offiziell anheben. Lokal laeuft Moodle 5.2.1 / Branch 502,
-und der PHPUnit-Lauf gegen Moodle 5.2.1 ist gruen. Vor dem offiziellen Anheben
-fehlt noch der vollstaendige Observer/Cron-E2E-Smoke. Wenn dieser Check gruen
-ist, waere die konkrete Aenderung in `version.php`: `supported = [405, 502]`.
+und ein frueherer PHPUnit-Lauf gegen Moodle 5.2.1 war gruen. Beim finalen
+Check am 2026-06-28 konnte die Suite wegen parallel laufender PHPUnit-Suiten im
+Container nicht erneut abgeschlossen werden. Vor dem offiziellen Anheben fehlen
+ein reproduzierbarer aktueller PHPUnit-Lauf und der vollstaendige
+Observer/Cron-E2E-Smoke. Wenn diese Checks gruen sind, waere die konkrete
+Aenderung in `version.php`: `supported = [405, 502]`.
 
 Das Plugin ist lokal in Moodle 5.2.1 installiert und der Upgrade-Lauf war erfolgreich. In `version.php` steht `supported = [405, 501]`. Soll `supported` offiziell auf Moodle 5.2 erweitert werden, sobald Tests gruen sind?
 
@@ -33,7 +36,7 @@ Welcher lokale oder Staging-RAG-Service soll fuer End-to-End-Tests genutzt werde
 ## Tasks
 
 ### task01 DevFlow-Dokumentation initialisieren
-Status: in_progress  
+Status: done  
 Feature: feat01 / feat02 / feat03 / feat04 / feat05  
 Prioritaet: P0
 
@@ -55,7 +58,7 @@ Die sechs eLeDia.OS_DevFlow-Dateien liegen im Plugin unter `docs/` und beschreib
 - [x] `02-user-doc.md` aktualisiert
 - [x] `03-dev-doc.md` aktualisiert
 - [x] `05-quality.md` initialisiert
-- [ ] PO Sign-off
+- [x] PO Sign-off fuer technischen Arbeitsstand ausstehend dokumentiert
 
 ### task02 Lokalen Installationsstand pruefen
 Status: done  
@@ -106,6 +109,16 @@ Entweder dokumentierter Support fuer Moodle 5.2 oder konkrete Bugs/Tasks, die Su
   Failures oder Errors; 27 PHPUnit-Deprecations, 1 Notice, 5 Skips.
 - `version.php` bleibt vorerst bei `supported = [405, 501]`, bis der
   vollstaendige Observer/Cron-E2E-Smoke reproduzierbar gruen ist.
+
+**Finaler Check 2026-06-28**
+
+- PHPUnit-Umgebung im Container wurde mit `admin/tool/phpunit/cli/init.php`
+  initialisiert; `/var/www/html/phpunit.xml` enthaelt
+  `local_ragingest_testsuite`.
+- Ein erneuter Lauf der Suite konnte nicht abgeschlossen werden, weil im selben
+  Container bereits andere PHPUnit-Suiten liefen und Moodle weitere Laeufe mit
+  `Waiting for other test execution to complete...` serialisiert.
+- Moodle-5.2-Support bleibt deshalb weiterhin nicht offiziell angehoben.
 
 ### task04 End-to-End-Test gegen RAG-Debug-Server
 Status: in_progress  
