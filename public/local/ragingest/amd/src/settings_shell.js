@@ -91,8 +91,14 @@ define([], function() {
         }
         form.dataset.rgShellWrapped = '1';
         document.body.classList.add('path-local-ragingest', 'rg-admin-settings-shell-page');
+        document.body.classList.remove('drawer-open-right', 'drawer-ease');
         document.body.classList.remove('rg-admin-settings-pending');
         document.body.classList.add('rg-admin-settings-ready');
+
+        const page = document.getElementById('page');
+        if (page) {
+            page.classList.remove('show-drawer-right');
+        }
 
         const shell = document.createElement('div');
         shell.className = 'lh-plugin-shell rg-admin-settings-shell';

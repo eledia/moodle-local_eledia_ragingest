@@ -73,6 +73,17 @@ body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #p
     display: none !important;
 }
 
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page {
+    margin-right: 0 !important;
+    transition: none !important;
+}
+
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #page.drawers,
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #page.drawers.show-drawer-right {
+    margin-right: 0 !important;
+    padding-right: 0 !important;
+}
+
 .rg-admin-settings-shell-page #region-main,
 .path-local-ragingest #region-main {
     background: transparent;
