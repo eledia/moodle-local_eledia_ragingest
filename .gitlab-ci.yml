@@ -890,24 +890,40 @@ mirror_github_flat:
     GIT_COMMITTER_NAME: "eLeDia GitLab Mirror"
     GIT_COMMITTER_EMAIL: "noreply@eledia.de"
   script:
-    - apk add --no-cache git unzip
+    - apk add --no-cache git
     - test -d "$PLUGIN_PATH"
     - test -f "$PLUGIN_PATH/version.php"
-    - rm -rf /tmp/plugin-flat /tmp/github-mirror
-    - mkdir -p /tmp/plugin-flat
-    # Flatten the nested Moodle checkout into a plugin-root repository. This
-    # honours export-ignore rules from the plugin .gitattributes, so release-only
-    # helper files and local submission drafts are not mirrored.
-    - git archive --format=tar HEAD:"$PLUGIN_PATH" | tar -x -C /tmp/plugin-flat
-    - git clone "https://oauth2:${GITHUB_MIRROR_TOKEN}@${GITHUB_MIRROR_URL#https://}" /tmp/github-mirror
-    - cd /tmp/github-mirror
-    - find . -mindepth 1 -maxdepth 1 ! -name .git -exec rm -rf {} +
+    - rm -rf /tmp/plugin-flat /tmp/github-flat
+    - mkdir -p /tmp/plugin-flat /tmp/github-flat
+    # Build a flat plugin checkout from the nested Moodle path. The resulting
+    # GitHub repository has version.php, classes/, db/, .github/ etc. at root.
+    # This avoids GitLab repository mirroring, which can only mirror the nested
+    # source repository as-is.
+    - git archive --format=tar "$CI_COMMIT_SHA:$PLUGIN_PATH" | tar -x -C /tmp/plugin-flat
+    - test -f /tmp/plugin-flat/version.php
+    - test ! -d /tmp/plugin-flat/public
+    - cd /tmp/github-flat
+    - git init
+    - git checkout -b "${GITHUB_MIRROR_BRANCH:-main}"
     - cp -a /tmp/plugin-flat/. .
     - git add -A
-    - |
-      if git diff --cached --quiet; then
-        echo "No mirror changes to push."
-        exit 0
-      fi
     - git commit -m "Mirror ${CI_COMMIT_SHA} from GitLab"
-    - git push origin HEAD:${GITHUB_MIRROR_BRANCH:-main}
+    - |
+      case "$GITHUB_MIRROR_URL" in
+        https://github.com/*)
+          MIRROR_REMOTE="https://x-access-token:${GITHUB_MIRROR_TOKEN}@${GITHUB_MIRROR_URL#https://}"
+          ;;
+        github.com/*)
+          MIRROR_REMOTE="https://x-access-token:${GITHUB_MIRROR_TOKEN}@${GITHUB_MIRROR_URL}"
+          ;;
+        *)
+          echo "GITHUB_MIRROR_URL must look like https://github.com/org/repo.git" >&2
+          exit 2
+          ;;
+      esac
+      git remote add github "$MIRROR_REMOTE"
+      git ls-remote --exit-code github >/dev/null
+      git push --force github HEAD:${GITHUB_MIRROR_BRANCH:-main}
+      if [ -n "$CI_COMMIT_TAG" ]; then
+        git push --force github "$CI_COMMIT_TAG"
+      fi
