@@ -65,6 +65,9 @@ final class shell {
     public static function require_css(): void {
         global $PAGE;
 
+        $PAGE->add_body_class('path-local-ragingest');
+        $PAGE->add_body_class('lh-plugin-shell-page');
+
         $PAGE->requires->css('/local/ragingest/styles.css');
         if (class_exists('\\block_eledia_aitutor\\output\\shell')) {
             $PAGE->requires->css('/blocks/eledia_aitutor/styles.css');
@@ -92,14 +95,13 @@ final class shell {
             'tagline' => get_string('shell_tagline', 'local_ragingest'),
             'subtitle' => get_string('shell_subtitle', 'local_ragingest'),
             'sectionnav' => self::sectionnav($active),
-        ] + \local_lernhive\output\plugin_shell::action_slots(
-            'local_ragingest',
-            true,
-            null,
-            get_string('shell_help_label', 'local_ragingest'),
-            null,
-            $active === self::ACTIVE_SETTINGS
-        );
+            'hasactions' => true,
+            'helpurl' => (new moodle_url('/local/ragingest/help.php'))->out(false),
+            'helplabel' => get_string('shell_help_label', 'local_ragingest'),
+            'settingsurl' => '',
+            'settingslabel' => get_string('settings', 'core'),
+            'settingsiscurrent' => $active === self::ACTIVE_SETTINGS,
+        ];
     }
 
     /**

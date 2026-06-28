@@ -283,18 +283,20 @@ Letzter Lauf: 2026-06-28
 - `phpcs --standard=moodle-extra public/local/ragingest`: passed.
 - PHPUnit-Init: passed; `/var/www/html/phpunit.xml` enthaelt
   `local_ragingest_testsuite`.
-- PHPUnit-Suite: nicht abgeschlossen, weil im Container parallel bereits
-  `local_literag_testsuite` und `webservice_elediamcp_testsuite` liefen. Moodle
-  meldete fuer den RAGIngest-Lauf `Waiting for other test execution to
-  complete...`.
-- AMD/CSS-Grunt: nicht ausgefuehrt, weil `npx` im Container am 2026-06-28 nicht
-  vorhanden war.
+- PHPUnit-Suite: passed, 164 Tests / 373 Assertions / 0 Failures / 0 Errors / 5
+  Skips; 27 PHPUnit-Deprecations, 1 Notice.
+- AMD-Syntax und Sourcemap-JSON: passed.
+- AMD/CSS-Grunt: nicht ausgefuehrt, weil `npx`/grunt im Container am
+  2026-06-28 nicht vorhanden war.
+- Release-Archivcheck via `git archive`: passed; keine Dev-Helfer,
+  `.submission-draft.md`, `lang/de`, `vendor/` oder `node_modules` im Archiv.
 
 **Bewertung**
 
-Der Code-Precheck ist gruen. Fuer eine finale Einreichungsfreigabe fehlen noch
-ein aktueller, exklusiver PHPUnit-Lauf der RAGIngest-Suite und ein reproduzierbar
-verfuegbarer Frontend-Toolchain-Check fuer AMD/CSS.
+Der Code-Precheck ist gruen. Fuer eine finale Einreichungsfreigabe bleibt nur
+der reproduzierbar verfuegbare Frontend-Toolchain-Check fuer `grunt amd` /
+`grunt rawcss` offen; alternativ muss dokumentiert werden, dass fuer diesen
+Release der AMD-Syntax-/Sourcemap-Check ausreichend ist.
 
 ## Bugs
 

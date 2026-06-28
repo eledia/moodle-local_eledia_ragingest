@@ -90,7 +90,7 @@ define([], function() {
             return;
         }
         form.dataset.rgShellWrapped = '1';
-        document.body.classList.add('path-local-ragingest', 'rg-admin-settings-shell-page');
+        document.body.classList.add('path-local-ragingest', 'lh-plugin-shell-page', 'rg-admin-settings-shell-page');
         document.body.classList.remove('drawer-open-right', 'drawer-ease');
         document.body.classList.remove('rg-admin-settings-pending');
         document.body.classList.add('rg-admin-settings-ready');

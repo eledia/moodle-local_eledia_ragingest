@@ -95,6 +95,7 @@ if ($hassiteconfig) {
 
         if (shell::is_available()) {
             $PAGE->add_body_class('path-local-ragingest');
+            $PAGE->add_body_class('lh-plugin-shell-page');
             $PAGE->add_body_class('rg-admin-settings-shell-page');
             $PAGE->add_body_class('rg-admin-settings-pending');
 
