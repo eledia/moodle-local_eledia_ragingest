@@ -56,6 +56,13 @@
     display: none;
 }
 
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #theme_boost-drawers-blocks,
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #block-region-side-pre,
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page .drawer-toggles .drawer-right-toggle,
+body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #page .drawer-right-toggle {
+    display: none !important;
+}
+
 .rg-admin-settings-shell-page #region-main,
 .path-local-ragingest #region-main {
     background: transparent;
