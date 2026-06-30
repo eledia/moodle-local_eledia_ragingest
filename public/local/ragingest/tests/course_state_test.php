@@ -63,12 +63,13 @@ final class course_state_test extends \advanced_testcase {
         $course = $this->getDataGenerator()->create_course(['category' => $cat->id]);
         set_config('enabledcategories', (string) $cat->id, 'local_ragingest');
 
-        $manager = new class ([[
+        $reindexresults = [[
             'cmid' => 17,
             'success' => false,
             'status' => 'error',
             'message' => 'transport failed',
-        ]]) extends ingestion_manager {
+        ]];
+        $manager = new class ($reindexresults) extends ingestion_manager {
             /** @var array<int, array> */
             private array $results;
 
