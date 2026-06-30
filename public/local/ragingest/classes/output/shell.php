@@ -56,7 +56,7 @@ final class shell {
      * @return bool
      */
     public static function is_available(): bool {
-        return class_exists('\local_lernhive\output\plugin_shell');
+        return self::tutor_shell_class() !== null;
     }
 
     /**
@@ -68,15 +68,47 @@ final class shell {
         $PAGE->add_body_class('path-local-ragingest');
         $PAGE->add_body_class('lh-plugin-shell-page');
 
-        $PAGE->requires->css('/local/ragingest/styles.css');
+        self::css('/local/ragingest/styles.css');
         if (class_exists('\\block_eledia_aitutor\\output\\shell')) {
-            $PAGE->requires->css('/blocks/eledia_aitutor/styles.css');
+            self::css('/blocks/eledia_aitutor/styles.css');
         } else if (class_exists('\\block_elediaaitutor\\output\\shell')) {
-            $PAGE->requires->css('/blocks/elediaaitutor/styles.css');
+            self::css('/blocks/elediaaitutor/styles.css');
         }
-        if (self::is_available()) {
-            $PAGE->requires->css('/local/lernhive/styles.css');
+    }
+
+    /**
+     * Queue a plugin stylesheet, cache-busted on the theme revision so edits are
+     * not masked by a stale browser copy of a bare, unversioned include.
+     *
+     * @param string $path Root-relative CSS path.
+     */
+    private static function css(string $path): void {
+        global $PAGE, $CFG;
+
+        $rev = isset($CFG->themerev) ? (int) $CFG->themerev : -1;
+        $PAGE->requires->css(new moodle_url($path, ['rev' => $rev > 0 ? $rev : time()]));
+    }
+
+    /**
+     * Render the shared eLeDia.ai Tutor shell header (the cross-plugin top
+     * navigation) with RagIngest marked active.
+     *
+     * @param string $active Active section key (unused; RagIngest is always the active tab).
+     * @return string Header HTML, or '' when the eLeDia.ai Tutor block shell is unavailable.
+     */
+    public static function header_html(string $active = self::ACTIVE_SETTINGS): string {
+        global $OUTPUT;
+
+        $tutorshell = self::tutor_shell_class();
+        if ($tutorshell !== null) {
+            $component = explode('\\', ltrim($tutorshell, '\\'))[0];
+            return $OUTPUT->render_from_template(
+                $component . '/plugin_shell_header',
+                $tutorshell::context('ragingest', false)
+            );
         }
+
+        return '';
     }
 
     /**

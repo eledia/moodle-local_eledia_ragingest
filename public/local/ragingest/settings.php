@@ -99,15 +99,23 @@ if ($hassiteconfig) {
             $PAGE->add_body_class('rg-admin-settings-shell-page');
             $PAGE->add_body_class('rg-admin-settings-pending');
 
-            $headerhtml = $OUTPUT->render_from_template(
-                'local_lernhive/plugin_shell_header',
-                shell::context(shell::ACTIVE_SETTINGS)
-            );
-            $PAGE->requires->js_call_amd('local_ragingest/settings_shell', 'init', [[
+            $headerhtml = shell::header_html(shell::ACTIVE_SETTINGS);
+            $shellconfig = [
                 'headerHtml' => $headerhtml,
                 'pluginTitle' => get_string('pluginname', 'local_ragingest'),
                 'reindexHtml' => $reindexhtml,
-            ]]);
+            ];
+            // js_amd_inline (not js_call_amd): the header HTML exceeds the 1024-char
+            // js_call_amd budget, which dev debugging escalates to a fatal.
+            $encodedconfig = json_encode(
+                $shellconfig,
+                JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_UNESCAPED_UNICODE
+            );
+            $PAGE->requires->js_amd_inline(
+                "require(['local_ragingest/settings_shell'], function(shell) {"
+                . "shell.init({$encodedconfig});"
+                . "});"
+            );
         } else if ($pendingcount > 0) {
             $fallbackreindexhtml = $reindexhtml;
         }

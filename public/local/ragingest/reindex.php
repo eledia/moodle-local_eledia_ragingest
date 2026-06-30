@@ -48,10 +48,7 @@ echo $OUTPUT->header();
 
 echo html_writer::start_div('lh-plugin-shell rg-shell-page');
 if (shell::is_available()) {
-    echo $OUTPUT->render_from_template(
-        'local_lernhive/plugin_shell_header',
-        shell::context(shell::ACTIVE_REINDEX)
-    );
+    echo shell::header_html(shell::ACTIVE_REINDEX);
 }
 echo html_writer::start_div('lh-plugin-content-area rg-shell-card');
 

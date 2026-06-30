@@ -59,10 +59,7 @@ echo $OUTPUT->header();
 
 $content = '';
 if (shell::is_available()) {
-    $content .= $OUTPUT->render_from_template(
-        'local_lernhive/plugin_shell_header',
-        shell::context(shell::ACTIVE_DOCS)
-    );
+    $content .= shell::header_html(shell::ACTIVE_DOCS);
 }
 
 $nav = html_writer::start_tag('nav', [
