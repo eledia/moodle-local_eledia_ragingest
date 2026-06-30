@@ -115,7 +115,7 @@ final class shell {
      * Build the shell context.
      *
      * @param string $active Active section key.
-     * @return array<string, mixed>
+     * @return array<string,mixed>
      */
     public static function context(string $active = self::ACTIVE_SETTINGS): array {
         if (!self::is_available()) {

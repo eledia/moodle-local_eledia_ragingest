@@ -43,7 +43,7 @@ interface multi_document_extractor {
      * Extract one or more documents from a course module.
      *
      * @param \cm_info $cm The course module info.
-     * @return array<int, array{content: string, content_type: string, title: string, suffix: string}>
+     * @return array<int,array{content: string,content_type: string,title: string,suffix: string}>
      *         A list of documents. Each must include a non-empty `suffix` that
      *         is unique within the module. An empty list means "no content".
      */

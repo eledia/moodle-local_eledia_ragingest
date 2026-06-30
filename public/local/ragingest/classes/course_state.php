@@ -118,7 +118,7 @@ class course_state {
      * Skipped modules are not errors: an empty or unsupported course can still
      * be considered reconciled, otherwise it would be queued forever.
      *
-     * @param array<int, array> $results Result rows from ingestion_manager.
+     * @param array $results Result rows from ingestion_manager.
      * @return bool
      */
     private static function has_error_result(array $results): bool {

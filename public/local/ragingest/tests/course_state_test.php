@@ -70,13 +70,13 @@ final class course_state_test extends \advanced_testcase {
             'message' => 'transport failed',
         ]];
         $manager = new class ($reindexresults) extends ingestion_manager {
-            /** @var array<int, array> */
+            /** @var array */
             private array $results;
 
             /**
              * Constructor.
              *
-             * @param array<int, array> $results Result rows.
+             * @param array $results Result rows.
              */
             public function __construct(array $results) {
                 $this->results = $results;
@@ -86,7 +86,7 @@ final class course_state_test extends \advanced_testcase {
              * Return injected reindex results.
              *
              * @param int $courseid Course id.
-             * @return array<int, array>
+             * @return array
              */
             public function reindex_course(int $courseid): array {
                 return $this->results;

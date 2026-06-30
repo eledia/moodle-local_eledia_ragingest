@@ -31,7 +31,7 @@ body#page-admin-setting-local_ragingest_settings.rg-admin-settings-pending #admi
 
 body#page-admin-setting-local_ragingest_settings.rg-admin-settings-ready #adminsettings {
     opacity: 1;
-    transition: opacity 0.08s ease;
+    transition: opacity 0.1s ease;
 }
 
 .rg-admin-settings-shell #adminsettings {
@@ -70,18 +70,18 @@ body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #t
 body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #block-region-side-pre,
 body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page .drawer-toggles .drawer-right-toggle,
 body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #page .drawer-right-toggle {
-    display: none !important;
+    display: none !important; /* stylelint-disable-line declaration-no-important */
 }
 
 body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page {
-    margin-right: 0 !important;
-    transition: none !important;
+    margin-right: 0 !important; /* stylelint-disable-line declaration-no-important */
+    transition: none !important; /* stylelint-disable-line declaration-no-important */
 }
 
 body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #page.drawers,
 body#page-admin-setting-local_ragingest_settings.rg-admin-settings-shell-page #page.drawers.show-drawer-right {
-    margin-right: 0 !important;
-    padding-right: 0 !important;
+    margin-right: 0 !important; /* stylelint-disable-line declaration-no-important */
+    padding-right: 0 !important; /* stylelint-disable-line declaration-no-important */
 }
 
 .rg-admin-settings-shell-page #region-main,

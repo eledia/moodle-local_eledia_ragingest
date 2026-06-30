@@ -56,7 +56,7 @@ class extractor implements content_extractor, multi_document_extractor {
      * parsed by the RAG service rather than reduced to a filename reference.
      *
      * @param \cm_info $cm The course module info.
-     * @return array<int, array{content: string, content_type: string, title: string, suffix: string}>
+     * @return array<int,array{content: string,content_type: string,title: string,suffix: string}>
      */
     public function extract_documents(\cm_info $cm): array {
         [$introhtml, $files] = self::collect($cm);
@@ -135,7 +135,7 @@ class extractor implements content_extractor, multi_document_extractor {
      * Collect the folder description and its supported files.
      *
      * @param \cm_info $cm The course module info.
-     * @return array{0: string, 1: array<int, array{filename: string, mimetype: string, content: string}>}
+     * @return array{0: string, 1: array<int,array{filename: string,mimetype: string,content: string}>}
      */
     private static function collect(\cm_info $cm): array {
         global $DB;

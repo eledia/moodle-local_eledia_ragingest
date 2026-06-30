@@ -228,7 +228,7 @@ class h5p_text_extractor {
      *
      * @param array $node The associative node.
      * @param string[] $blocks Collected blocks (by reference).
-     * @return array<string, true> Keys consumed by the handlers.
+     * @return array<string,true> Keys consumed by the handlers.
      */
     private static function apply_semantic(array $node, array &$blocks): array {
         $consumed = [];

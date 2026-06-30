@@ -138,7 +138,7 @@ class course_gate {
      * still accepted so existing pilot configurations remain effective until
      * they are saved through the new UI.
      *
-     * @return array<int, true>
+     * @return array<int,true>
      */
     private static function pilot_course_ids(): array {
         global $DB;
@@ -228,7 +228,7 @@ class course_gate {
     /**
      * The configured allow-list of category ids, as a lookup set.
      *
-     * @return array<int, true>
+     * @return array<int,true>
      */
     private static function enabled_category_ids(): array {
         static $cache = [];

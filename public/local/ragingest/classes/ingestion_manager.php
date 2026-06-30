@@ -169,7 +169,7 @@ class ingestion_manager {
      * are all cleared. Idempotent: deleting absent documents is a no-op.
      *
      * @param int $courseid The course id.
-     * @return array<int, array> Per-module result rows.
+     * @return array<int,array> Per-module result rows.
      */
     public function purge_course(int $courseid): array {
         if (!$this->client->is_configured()) {
