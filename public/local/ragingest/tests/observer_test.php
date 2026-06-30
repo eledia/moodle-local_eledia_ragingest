@@ -16,6 +16,8 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the event observer class.
  *
@@ -24,8 +26,8 @@ namespace local_ragingest;
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\observer
  */
+#[CoversClass(\local_ragingest\observer::class)]
 final class observer_test extends \advanced_testcase {
     /**
      * Test that creating a course module queues an ingestion task.

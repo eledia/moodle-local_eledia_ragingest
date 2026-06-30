@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the source_id_helper class.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\source_id_helper
  */
+#[CoversClass(\local_ragingest\source_id_helper::class)]
 final class source_id_helper_test extends \advanced_testcase {
     /**
      * Test that the tenant prefix is derived from wwwroot, not configured.

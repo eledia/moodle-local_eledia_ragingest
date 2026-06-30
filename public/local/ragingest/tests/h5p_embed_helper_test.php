@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the H5P embed helper.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\h5p_embed_helper
  */
+#[CoversClass(\local_ragingest\h5p_embed_helper::class)]
 final class h5p_embed_helper_test extends \advanced_testcase {
     /**
      * Test that HTML without any H5P placeholders passes through unchanged.

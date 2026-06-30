@@ -16,15 +16,17 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the opt-in course ingestion gate.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\course_gate
- * @covers     \local_ragingest\setup
  */
+#[CoversClass(\local_ragingest\course_gate::class)]
+#[CoversClass(\local_ragingest\setup::class)]
 final class course_gate_test extends \advanced_testcase {
     /**
      * Opt-in: with no categories enabled and no override, nothing is ingested.

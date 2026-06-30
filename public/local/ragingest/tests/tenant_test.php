@@ -16,22 +16,25 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+
 /**
  * Unit tests for the derived tenant identity.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\tenant
  */
+#[CoversClass(\local_ragingest\tenant::class)]
 final class tenant_test extends \advanced_testcase {
     /**
      * Canonicalisation: host (lowercased), optional subdirectory, safe alphabet.
      *
-     * @dataProvider canonicalisation_provider
      * @param string $url The site URL.
      * @param string $expected The canonical tenant id.
      */
+    #[DataProvider('canonicalisation_provider')]
     public function test_from_url(string $url, string $expected): void {
         $this->assertSame($expected, tenant::from_url($url));
     }

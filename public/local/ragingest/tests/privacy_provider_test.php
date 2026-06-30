@@ -20,15 +20,16 @@ namespace local_ragingest;
 
 use core_privacy\local\metadata\collection;
 use local_ragingest\privacy\provider;
+use PHPUnit\Framework\Attributes\CoversClass;
 
 /**
  * Privacy provider tests.
  *
  * @package    local_ragingest
- * @covers     \local_ragingest\privacy\provider
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
  */
+#[CoversClass(\local_ragingest\privacy\provider::class)]
 final class privacy_provider_test extends \core_privacy\tests\provider_testcase {
     /**
      * Metadata declares the external eLeDia.ai RagIngest service.

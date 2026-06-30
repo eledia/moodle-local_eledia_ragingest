@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the folder content extractor.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \ragingestextractor_folder\extractor
  */
+#[CoversClass(\ragingestextractor_folder\extractor::class)]
 final class extractor_folder_test extends \advanced_testcase {
     /**
      * Test that the folder extractor supports folder modules.

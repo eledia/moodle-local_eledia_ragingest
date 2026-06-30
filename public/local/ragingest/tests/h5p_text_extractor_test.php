@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the H5P text extractor utility.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\h5p_text_extractor
  */
+#[CoversClass(\local_ragingest\h5p_text_extractor::class)]
 final class h5p_text_extractor_test extends \advanced_testcase {
     /**
      * Test extraction from a flat Fill-in-the-Blanks style JSON.

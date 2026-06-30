@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the document content helper.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\document
  */
+#[CoversClass(\local_ragingest\document::class)]
 final class document_test extends \advanced_testcase {
     /**
      * An HTML document with no leading heading gains an escaped <h1> title.

@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the advanced-grading criteria helper.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\grading_criteria
  */
+#[CoversClass(\local_ragingest\grading_criteria::class)]
 final class grading_criteria_test extends \advanced_testcase {
     /**
      * No advanced grading configured → empty string.

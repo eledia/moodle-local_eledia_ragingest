@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the workshop content extractor.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \ragingestextractor_workshop\extractor
  */
+#[CoversClass(\ragingestextractor_workshop\extractor::class)]
 final class extractor_workshop_test extends \advanced_testcase {
     /**
      * Instructions and the configured grading-strategy dimensions are extracted.

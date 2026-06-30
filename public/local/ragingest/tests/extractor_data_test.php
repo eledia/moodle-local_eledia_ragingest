@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the data (database activity) content extractor.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \ragingestextractor_data\extractor
  */
+#[CoversClass(\ragingestextractor_data\extractor::class)]
 final class extractor_data_test extends \advanced_testcase {
     /**
      * Test that the data extractor supports data modules.

@@ -16,14 +16,17 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+use PHPUnit\Framework\Attributes\DataProvider;
+
 /**
  * Unit tests for the videotime transcript content extractor.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \ragingestextractor_videotime\extractor
  */
+#[CoversClass(\ragingestextractor_videotime\extractor::class)]
 final class extractor_videotime_test extends \advanced_testcase {
     /**
      * Skip the current test if mod_videotime generator is not available.
@@ -230,10 +233,10 @@ final class extractor_videotime_test extends \advanced_testcase {
     /**
      * Test VTT parsing strips headers, timestamps, and formatting tags.
      *
-     * @dataProvider vtt_parsing_provider
      * @param string $vtt The raw VTT input.
      * @param string $expected The expected plain-text output.
      */
+    #[DataProvider('vtt_parsing_provider')]
     public function test_parse_vtt_text(string $vtt, string $expected): void {
         $result = \ragingestextractor_videotime\extractor::parse_vtt_text($vtt);
         $this->assertEquals($expected, $result);

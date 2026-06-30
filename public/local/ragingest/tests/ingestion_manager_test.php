@@ -16,14 +16,16 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for the ingestion_manager class.
  *
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\ingestion_manager
  */
+#[CoversClass(\local_ragingest\ingestion_manager::class)]
 final class ingestion_manager_test extends \advanced_testcase {
     /**
      * Set up test configuration.

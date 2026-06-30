@@ -16,6 +16,8 @@
 
 namespace local_ragingest;
 
+use PHPUnit\Framework\Attributes\CoversClass;
+
 /**
  * Unit tests for course ingestion-state reconciliation.
  *
@@ -26,8 +28,8 @@ namespace local_ragingest;
  * @package    local_ragingest
  * @copyright  2026 Christopher Reimann, eLeDia GmbH <christopher.reimann@eledia.de>
  * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
- * @covers     \local_ragingest\course_state
  */
+#[CoversClass(\local_ragingest\course_state::class)]
 final class course_state_test extends \advanced_testcase {
     /**
      * Configure the API so the manager is "configured".
