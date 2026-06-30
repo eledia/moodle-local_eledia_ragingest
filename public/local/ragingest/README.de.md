@@ -375,7 +375,7 @@ http://localhost:8080
 Typischer Ablauf:
 
 ```bash
-cd /Users/moskaliuk/Documents/Code/eledia.ai
+cd /path/to/eledia.ai
 ./scripts/local-deploy.sh deploy
 ```
 
@@ -410,7 +410,7 @@ Das lokale Docker-Setup kann Moodle-PHPUnit initialisieren und die Plugin-Suite
 ausfuehren:
 
 ```bash
-cd /Users/moskaliuk/Documents/Code/eledia.ai
+cd /path/to/eledia.ai
 ./scripts/local-deploy.sh phpunit-init
 ./scripts/local-deploy.sh phpunit
 PHPUNIT_TESTSUITE=local_ragingest_testsuite ./scripts/local-deploy.sh phpunit
@@ -453,7 +453,7 @@ composer init --no-interaction --name=local-ragingest/moodle-cs-tools
 composer config allow-plugins.dealerdirect/phpcodesniffer-composer-installer true
 composer require --dev moodlehq/moodle-cs
 
-cd /Users/moskaliuk/Documents/Code/local_ragingest
+cd /path/to/local_ragingest
 /tmp/local-ragingest-moodle-cs/vendor/bin/phpcs \
     --standard=moodle \
     --extensions=php \
