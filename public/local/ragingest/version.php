@@ -24,7 +24,7 @@
 
 defined('MOODLE_INTERNAL') || die();
 
-$plugin->version   = 2026062800;
+$plugin->version   = 2026070200;
 $plugin->requires  = 2024100700;
 $plugin->supported = [405, 501];
 $plugin->component = 'local_ragingest';
